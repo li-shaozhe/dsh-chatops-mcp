@@ -19,13 +19,13 @@
   "author": {
     "name": "xhzl"
   },
-  "homepage": "https://github.com/xhzl/dsh-chatops-mcp#readme",
+  "homepage": "https://github.com/li-shaozhe/dsh-chatops-mcp#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/xhzl/dsh-chatops-mcp.git"
+    "url": "git+https://github.com/li-shaozhe/dsh-chatops-mcp.git"
   },
   "bugs": {
-    "url": "https://github.com/xhzl/dsh-chatops-mcp/issues"
+    "url": "https://github.com/li-shaozhe/dsh-chatops-mcp/issues"
   },
   "type": "module",
   "engines": {
