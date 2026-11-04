@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Local build/test scratch
+*.log
+*.tgz
+.tmp/
+tmp/
+
+# Editor / OS noise
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Local connection state never belongs in the repo (it can contain plaintext env values)
+connections.json
+.env
+.env.*

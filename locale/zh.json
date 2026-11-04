@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "钉钉 / 飞书 / 飞书项目 MCP",
+    "description": "连接器市场：一键连接钉钉（dws CLI）、飞书（lark-cli）与飞书项目（官方 @lark-project/mcp），缺 CLI 就地安装、缺登录走设备码授权；也支持手填 command/args/env 或 url/headers 自定义 MCP 连接。连接结果写入 profile 的 cordis.yml，工具面随 CLI 升级自动扩展。"
+  }
+}

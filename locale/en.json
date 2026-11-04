@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "DingTalk / Feishu / Meego MCP",
+    "description": "Connector hub: one-click connect DingTalk (dws CLI), Feishu (lark-cli) and Feishu Project / Meego (official @lark-project/mcp) — installs the CLI when missing and runs device-code login when unauthenticated. Custom MCP connections (command/args/env or url/headers) are supported too. Connections are written to the profile's cordis.yml, and tool surfaces follow CLI upgrades."
+  }
+}

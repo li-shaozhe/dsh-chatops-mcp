@@ -1,0 +1,19 @@
+# 这个文件里**故意不写任何 mcp-client 行**。
+#
+# 早期版本在这里硬编码了三条 @deepseek-ai/dsh-mcp-client（钉钉 / 飞书 / 飞书项目），
+# 每条的 command / args / cwd 都是本机绝对路径。那样别人的机器上必然起不来，
+# 也让 npm 发布失去意义。
+#
+# 现在三条连接由插件自己在上电时 provision（见 connectors.js 的 seedBuiltins）：
+#   - command 用 nodeCommand() 推导真实 node（不能用 process.execPath，Electron 下它是 Harness.exe）
+#   - args / cwd 用 import.meta.url 推包内文件，与安装位置无关
+#   - 只有前置条件满足才建行（CLI 已装 / 令牌已填），否则等用户点「+」
+#   - 用户的连接与启停位存在 ~/.dsh/chatops/connections.json，重启后按它重建
+#
+# 工具名仍然是 mcp__dingtalk__* / mcp__feishu__* / mcp__meego__*，因为 serverName 没变。
+
+- insert:
+    # 面板 + 连接器内核。Host 半侧 index.js 负责 /chatops-mcp 路由、provision 与持久化；
+    # 浏览器半侧 client.js 负责左侧栏图标与主区域页面。
+    - id: chatops-mcp-panel
+      name: 'dsh-chatops-mcp'

@@ -1,0 +1,72 @@
+{
+  "name": "dsh-chatops-mcp",
+  "version": "1.7.0",
+  "description": "Connector hub for DeepSeek Harness: DingTalk (dws), Feishu (lark-cli) and Feishu Project (official @lark-project/mcp) as MCP tool servers, plus a panel with one-click connect, CLI auto-install, device-code login and custom MCP connections. Portable: no absolute paths, connections are provisioned at boot and persisted outside the profile.",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "dsh-bundle",
+    "mcp",
+    "mcp-server",
+    "connector",
+    "dingtalk",
+    "feishu",
+    "lark",
+    "meego",
+    "chatops"
+  ],
+  "license": "MIT",
+  "author": {
+    "name": "xhzl"
+  },
+  "homepage": "https://github.com/xhzl/dsh-chatops-mcp#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xhzl/dsh-chatops-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/xhzl/dsh-chatops-mcp/issues"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "server.js",
+    "client.js",
+    "cli.js",
+    "connectors.js",
+    "discovery.js",
+    "index.js",
+    "meego-launch.js",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE",
+    "locale/*.json",
+    "icon.svg"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-settings",
+        "@deepseek-ai/dsh-client-ui-theme"
+      ]
+    }
+  }
+}
