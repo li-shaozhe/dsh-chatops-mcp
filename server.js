@@ -26,7 +26,7 @@ import {
   selectedProducts,
 } from './discovery.js';
 
-const SERVER_VERSION = '1.7.0';
+const SERVER_VERSION = '1.7.1';
 const SUPPORTED_PROTOCOLS = ['2025-11-25', '2025-06-18', '2025-03-26', '2024-11-05', '2024-10-07'];
 const FALLBACK_PROTOCOL = '2025-03-26';
 const MAX_TEXT = 80000;
