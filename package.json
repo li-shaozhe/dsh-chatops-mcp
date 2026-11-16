@@ -1,7 +1,7 @@
 {
   "name": "dsh-chatops-mcp",
-  "version": "1.7.1",
-  "description": "Connector hub for DeepSeek Harness: DingTalk (dws), Feishu (lark-cli) and Feishu Project (official @lark-project/mcp) as MCP tool servers, plus a panel with one-click connect, CLI auto-install, device-code login and custom MCP connections. Portable: no absolute paths, connections are provisioned at boot and persisted outside the profile.",
+  "version": "1.9.0",
+  "description": "MCP service manager for DeepSeek Harness: one panel listing every mcp-client row (builtin DingTalk / Feishu / Feishu Project, user-added, and rows written elsewhere) with per-tool expansion, plus an MCP Hub of 21 installable templates. Portable: no absolute paths, connections are provisioned at boot and persisted outside the profile.",
   "keywords": [
     "dsh",
     "dsh-plugin",
@@ -48,6 +48,7 @@
     "connectors.js",
     "discovery.js",
     "index.js",
+    "hub.js",
     "meego-launch.js",
     "cordis.patch.yml",
     "README.md",

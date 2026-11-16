@@ -24,20 +24,27 @@ window.__ModuleLoader__.load({
     /* ── 静态样式（注入一次） ─────────────────────────────────────────── */
 
     const PANEL_CSS = [
-      '.co-root{display:flex;flex-direction:column;height:100%;min-height:0;background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);font-family:var(--dsh-font-family-text,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif);}',
-      '.co-hero{display:flex;align-items:flex-start;gap:12px;padding:20px 24px 14px;flex-shrink:0;}',
-      '.co-logo{width:32px;height:32px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;background:linear-gradient(135deg,#5b7cff,#3f5efb);box-shadow:0 2px 8px rgba(63,94,251,.28);}',
+      /* 间距与层级令牌：本面板局部作用域，不污染宿主。4px 网格 + 1.25 字阶。 */
+      '.co-root{--co-gap-1:4px;--co-gap-2:8px;--co-gap-3:12px;--co-gap-4:16px;--co-gap-5:20px;--co-gap-6:24px;'
+        + '--co-r-sm:6px;--co-r-md:8px;--co-r-lg:12px;--co-r-xl:16px;'
+        + '--co-ease:cubic-bezier(0,0,.2,1);'
+        + 'display:flex;flex-direction:column;height:100%;min-height:0;background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);'
+        + 'font-family:var(--dsh-font-family-text,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif);-webkit-font-smoothing:antialiased;}',
+      /* Hero：标题区与内容区之间用一条渐隐分隔线建立层级，而不是靠加粗大字。 */
+      '.co-hero{display:flex;align-items:flex-start;gap:12px;padding:20px 24px 16px;flex-shrink:0;position:relative;}',
+      '.co-hero::after{content:"";position:absolute;left:24px;right:24px;bottom:0;height:1px;background:linear-gradient(90deg,var(--dsw-alias-border-l1),transparent);}',
+      '.co-logo{width:34px;height:34px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;background:linear-gradient(135deg,#6b8cff,#3f5efb);box-shadow:0 2px 8px rgba(63,94,251,.28),inset 0 1px 0 rgba(255,255,255,.24);}',
       '.co-hd{flex:1;min-width:0;}',
       '.co-title{font-size:19px;font-weight:650;letter-spacing:-.45px;line-height:1.25;}',
-      '.co-sub{font-size:12px;color:var(--dsw-alias-label-caption);margin-top:3px;word-break:break-all;}',
-      '.co-toolbar{display:flex;align-items:center;gap:8px;padding:0 24px 12px;flex-shrink:0;}',
-      '.co-seg{display:inline-flex;padding:2px;background:var(--dsw-alias-bg-layer-2);border-radius:8px;gap:1px;}',
-      '.co-seg-btn{appearance:none;border:none;height:26px;padding:0 14px;font-size:12.5px;border-radius:6px;background:transparent;color:var(--dsw-alias-label-tertiary);cursor:pointer;font-family:inherit;transition:background 150ms ease,color 150ms ease;}',
+      '.co-sub{font-size:12px;color:var(--dsw-alias-label-caption);margin-top:3px;word-break:break-all;line-height:1.55;}',
+      '.co-toolbar{display:flex;align-items:center;gap:8px;padding:12px 24px 12px;flex-shrink:0;}',
+      '.co-seg{display:inline-flex;padding:3px;background:var(--dsw-alias-bg-layer-2);border-radius:10px;gap:2px;}',
+      '.co-seg-btn{appearance:none;border:none;height:27px;padding:0 14px;font-size:12.5px;border-radius:7px;background:transparent;color:var(--dsw-alias-label-tertiary);cursor:pointer;font-family:inherit;transition:background 160ms var(--co-ease),color 160ms var(--co-ease),box-shadow 160ms var(--co-ease);}',
       '.co-seg-btn:hover{color:var(--dsw-alias-label-secondary);}',
-      '.co-seg-btn[data-on="1"]{background:var(--dsw-alias-bg-base);color:var(--dsw-alias-label-primary);font-weight:600;box-shadow:0 1px 3px rgba(16,24,40,.10);}',
+      '.co-seg-btn[data-on="1"]{background:var(--dsw-alias-bg-base);color:var(--dsw-alias-label-primary);font-weight:600;box-shadow:0 1px 2px rgba(16,24,40,.08),0 2px 6px -2px rgba(16,24,40,.12);}',
       '.co-seg-btn:disabled{opacity:.4;cursor:default;}',
       '.co-seg-btn:disabled:hover{color:var(--dsw-alias-label-tertiary);}',
-      '.co-body{flex:1;min-height:0;overflow:auto;padding:0 24px 20px;}',
+      '.co-body{flex:1;min-height:0;overflow:auto;padding:0 24px 24px;}',
       '.co-body-flat{flex:1;min-height:0;display:flex;flex-direction:column;padding:0 24px 18px;}',
       '.co-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(272px,1fr));gap:12px;}',
       '.co-card{background:var(--dsw-alias-bg-base);border:1px solid var(--dsw-alias-border-l1);border-radius:12px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.10);display:flex;flex-direction:column;min-height:0;}',
@@ -128,6 +135,79 @@ window.__ModuleLoader__.load({
       '.co-code{display:inline-block;font-family:var(--dsh-font-family-code,ui-monospace,monospace);font-size:12px;padding:2px 6px;border-radius:5px;background:var(--dsw-alias-bg-layer-2);}',
       '.co-ok{font-size:12.5px;color:var(--dsw-alias-state-success-primary);}',
       '.co-warnbar{display:flex;align-items:center;gap:8px;padding:9px 11px;margin-bottom:12px;border-radius:9px;background:var(--dsw-alias-bg-layer-2);border:1px solid var(--dsw-alias-border-l1);font-size:12px;color:var(--dsw-alias-label-secondary);line-height:1.5;}',
+
+      /* ── 统计条：把「已启用 / 注册工具 / MCP 行」做成一组带分隔的数字 ──
+       * 之前是三个同权重的 chip，读起来没有主次。现在数字放大、标签缩小、竖线分隔；
+       * 主指标（已启用）用品牌色，其余中性。 */
+      '.co-stats{display:flex;align-items:stretch;gap:0;padding:12px 14px;margin-bottom:14px;'
+        + 'background:var(--dsw-alias-bg-base);border:1px solid var(--dsw-alias-border-l1);border-radius:var(--co-r-lg);}',
+      '.co-stat{display:flex;flex-direction:column;gap:1px;padding:0 18px;min-width:0;}',
+      '.co-stat:first-child{padding-left:2px;}',
+      '.co-stat + .co-stat{border-left:1px solid var(--dsw-alias-border-l1);}',
+      '.co-stat-num{font-size:18px;font-weight:650;line-height:1.15;letter-spacing:-.4px;font-variant-numeric:tabular-nums;color:var(--dsw-alias-label-primary);}',
+      '.co-stat-num[data-tone="brand"]{color:var(--dsw-alias-brand-primary);}',
+      '.co-stat-num[data-tone="warn"]{color:var(--dsw-alias-state-warn-primary);}',
+      '.co-stat-lb{font-size:11px;color:var(--dsw-alias-label-caption);white-space:nowrap;letter-spacing:.02em;}',
+      '.co-stat-grow{flex:1;}',
+      '.co-stat-act{display:flex;align-items:center;gap:8px;padding-left:14px;border-left:1px solid var(--dsw-alias-border-l1);}',
+
+      /* ── 我的 MCP：分组容器 + 行分隔线 ──
+       * 之前每条连接都是一张独立悬浮卡片（8 张卡片各自带阴影），视觉上互相竞争，
+       * 没有「一个列表」的整体感，也没有视线落点。改成一张容器卡、行间 1px 分隔线：
+       * 列表本身成为一个视觉单元，扫描路径变成一条竖线。 */
+      '.co-svc-list{background:var(--dsw-alias-bg-base);border:1px solid var(--dsw-alias-border-l1);border-radius:var(--co-r-lg);'
+        + 'box-shadow:0 1px 2px rgba(16,24,40,.04);overflow:hidden;}',
+      '.co-svc{position:relative;transition:background 140ms var(--co-ease);}',
+      '.co-svc + .co-svc{border-top:1px solid var(--dsw-alias-border-l1);}',
+      '.co-svc:hover{background:var(--dsw-alias-bg-layer-1);}',
+      '.co-svc[data-off="1"] .co-svc-badge{filter:grayscale(1);opacity:.55;}',
+      '.co-svc[data-off="1"] .co-svc-name span:first-child{color:var(--dsw-alias-label-tertiary);}',
+      '.co-svc[data-open="1"]{background:var(--dsw-alias-bg-layer-1);}',
+      '.co-svc[data-open="1"]::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--dsw-alias-brand-primary);}',
+      '.co-svc-hd{display:flex;align-items:center;gap:10px;padding:9px 14px;min-height:52px;}',
+      '.co-svc-caret{appearance:none;border:none;background:none;color:var(--dsw-alias-label-caption);cursor:pointer;width:16px;height:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0;border-radius:4px;transition:transform 160ms var(--co-ease),color 120ms var(--co-ease);}',
+      '.co-svc-caret:hover:not(:disabled){color:var(--dsw-alias-label-primary);}',
+      '.co-svc-caret[data-open="1"]{transform:rotate(90deg);color:var(--dsw-alias-label-secondary);}',
+      '.co-svc-caret:disabled{opacity:.25;cursor:default;}',
+      '.co-svc-badge{width:32px;height:32px;border-radius:var(--co-r-md);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:650;color:#fff;letter-spacing:-.3px;box-shadow:inset 0 1px 0 rgba(255,255,255,.18);transition:filter 160ms var(--co-ease),opacity 160ms var(--co-ease);}',
+      '.co-svc-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;}',
+      '.co-svc-name{display:flex;align-items:center;gap:7px;font-size:13.5px;font-weight:600;min-width:0;line-height:1.3;}',
+      '.co-svc-sub{font-size:11.5px;color:var(--dsw-alias-label-caption);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.45;font-family:var(--dsh-font-family-code,ui-monospace,monospace);}',
+      '.co-svc-act{display:flex;align-items:center;gap:5px;flex-shrink:0;}',
+      '.co-svc-tools{display:flex;flex-wrap:wrap;gap:6px;padding:0 14px 14px 47px;}',
+      '.co-tool-tag{font-size:11px;line-height:15px;padding:2px 7px;border-radius:5px;background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-secondary);font-family:var(--dsh-font-family-code,ui-monospace,monospace);white-space:nowrap;cursor:default;transition:background 120ms var(--co-ease),color 120ms var(--co-ease);}',
+      '.co-tool-tag:hover{background:var(--dsw-alias-interactive-bg-active);color:var(--dsw-alias-label-primary);}',
+      '.co-switch{position:relative;width:34px;height:19px;border-radius:999px;border:none;padding:0;cursor:pointer;background:var(--dsw-alias-border-l2);transition:background 160ms var(--co-ease);flex-shrink:0;}',
+      '.co-switch[data-on="1"]{background:var(--dsw-alias-state-success-primary);}',
+      '.co-switch:disabled{opacity:.5;cursor:default;}',
+      '.co-switch::after{content:"";position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:999px;background:#fff;box-shadow:0 1px 2px rgba(16,24,40,.28);transition:transform 160ms var(--co-ease);}',
+      '.co-switch[data-on="1"]::after{transform:translateX(15px);}',
+      '.co-switch:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px;}',
+      '.co-icon-btn{appearance:none;width:26px;height:26px;border-radius:var(--co-r-sm);border:1px solid transparent;background:transparent;color:var(--dsw-alias-label-caption);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;padding:0;transition:background 120ms var(--co-ease),color 120ms var(--co-ease);}',
+      '.co-icon-btn:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary);}',
+      '.co-icon-btn:disabled{opacity:.25;cursor:default;}',
+      '.co-icon-btn:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:1px;}',
+      /* ── MCP Hub：分类 + 卡片 ── */
+      '.co-hub-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-bottom:14px;flex-shrink:0;}',
+      '.co-hub-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(272px,1fr));gap:10px;align-items:start;}',
+      /* 卡片高度由内容决定，不设 min-height：之前 98px 下限 + footer 的 margin-top:auto
+       * 会把只有一两行描述的卡片撑出大片空洞（单卡分类尤其明显）。 */
+      '.co-hub-card{display:flex;gap:10px;padding:12px 13px;background:var(--dsw-alias-bg-base);border:1px solid var(--dsw-alias-border-l1);border-radius:var(--co-r-lg);cursor:pointer;'
+        + 'transition:border-color 140ms var(--co-ease),box-shadow 140ms var(--co-ease),transform 140ms var(--co-ease);}',
+      '.co-hub-card:hover{border-color:var(--dsw-alias-border-l2);box-shadow:0 2px 6px rgba(16,24,40,.05),0 12px 28px -18px rgba(16,24,40,.28);transform:translateY(-1px);}',
+      '.co-hub-card:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px;}',
+      '.co-hub-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;}',
+      '.co-hub-name{display:flex;align-items:baseline;gap:6px;font-size:13.5px;font-weight:600;min-width:0;line-height:1.3;}',
+      '.co-hub-vendor{font-size:11px;color:var(--dsw-alias-label-caption);font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}',
+      '.co-hub-desc{font-size:11.5px;line-height:1.55;color:var(--dsw-alias-label-caption);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}',
+      '.co-hub-ft{display:flex;align-items:center;gap:5px;padding-top:4px;flex-wrap:wrap;}',
+      '.co-tag{font-size:10.5px;padding:1px 6px;border-radius:4px;background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-caption);white-space:nowrap;line-height:16px;}',
+      /* 分类标题：Hub 的分组靠它切段，之前 11px 灰色几乎看不见。
+       * 现在「标题 + 计数字 + 一条延伸到右侧的细线」，形成真实的分节感。 */
+      '.co-grp{display:flex;align-items:center;gap:8px;margin:20px 0 10px;font-size:12px;font-weight:650;color:var(--dsw-alias-label-secondary);letter-spacing:.02em;}',
+      '.co-grp:first-child{margin-top:2px;}',
+      '.co-grp::after{content:"";flex:1;height:1px;background:var(--dsw-alias-border-l1);}',
+      '.co-grp-n{font-size:11px;font-weight:500;color:var(--dsw-alias-label-caption);font-variant-numeric:tabular-nums;}',
     ].join('')
 
     // ── 主题 token ────────────────────────────────────────────────────
@@ -1303,27 +1383,82 @@ window.__ModuleLoader__.load({
   }
 }`
 
-    function JsonModal({ onClose, onSubmit, busy, error }) {
+    /**
+     * 添加 / 编辑一条 MCP 连接。
+     *
+     * 三个入口共用这一个弹层：
+     *   1. 贴 mcpServers JSON（默认入口）
+     *   2. 手填表单（stdio / streamable-http）
+     *   3. 从 MCP Hub 选一项 → 表单被预填，用户只补凭据
+     */
+    function JsonModal({ onClose, onSubmit, busy, error, preset, title }) {
+      const initial = preset
+        ? {
+            ...EMPTY_CUSTOM,
+            serverName: preset.serverName || '',
+            transport: preset.transport || 'stdio',
+            command: preset.command || '',
+            args: Array.isArray(preset.args) ? preset.args.join('\n') : '',
+            cwd: preset.cwd || '',
+            url: preset.url || '',
+            env: Object.entries(preset.env || {})
+              .map(([key, value]) => `${key}=${value}`)
+              .join('\n'),
+            headers: Object.entries(preset.headers || {})
+              .map(([key, value]) => `${key}: ${value}`)
+              .join('\n'),
+            toolCallTimeoutMs: String(preset.toolCallTimeoutMs || 60000),
+          }
+        : EMPTY_CUSTOM
       const [text, setText] = useState('')
-      const [manual, setManual] = useState(false)
-      const [form, setForm] = useState(EMPTY_CUSTOM)
+      const [manual, setManual] = useState(Boolean(preset))
+      const [form, setForm] = useState(initial)
+      // Hub 模板带声明的凭据字段：单独渲染成带标签的输入框，比让人在
+      // 「env 每行 KEY=VALUE」里对着占位符猜要填哪个键清楚得多。
+      const [creds, setCreds] = useState(() => {
+        if (!preset) return []
+        const list = []
+        for (const field of preset.envKeys || []) {
+          list.push({ kind: 'env', key: field.key, label: field.label || field.key, placeholder: field.placeholder || '', secret: field.secret !== false, value: '' })
+        }
+        for (const field of preset.headerKeys || []) {
+          list.push({ kind: 'header', key: field.key, label: field.label || field.key, placeholder: field.placeholder || '', secret: true, value: '' })
+        }
+        return list
+      })
+      const setCred = (kind, key) => (event) =>
+        setCreds((prev) => prev.map((item) => (item.kind === kind && item.key === key ? { ...item, value: event.target.value } : item)))
       const set = (key) => (event) => setForm((prev) => ({ ...prev, [key]: event.target.value }))
       const isHttp = form.transport === 'streamable-http'
       const jsonEmpty = !text.trim()
+      // 从 Hub 进来的模板，env / headers 里的空值不参与提交（空占位留着让人看见要填什么）。
+      const dropEmpty = (pairs) => {
+        const out = {}
+        for (const [key, value] of Object.entries(pairs)) if (String(value).trim()) out[key] = String(value).trim()
+        return out
+      }
 
       const submitForm = () => {
+        const env = dropEmpty(parsePairs(form.env, '='))
+        const headers = dropEmpty(parsePairs(form.headers, ':'))
+        for (const item of creds) {
+          if (!item.value.trim()) continue
+          if (item.kind === 'env') env[item.key] = item.value.trim()
+          else headers[item.key] = item.value.trim()
+        }
         onSubmit({
           serverName: form.serverName.trim(),
           transport: form.transport,
           command: form.command.trim(),
           args: form.args,
-          env: parsePairs(form.env, '='),
+          env,
           cwd: form.cwd.trim(),
           url: form.url.trim(),
-          headers: parsePairs(form.headers, ':'),
+          headers,
           toolCallTimeoutMs: Number(form.toolCallTimeoutMs) || 60000,
         })
       }
+      const missingCred = creds.filter((item) => !item.value.trim())
 
       return h(
         'div',
@@ -1334,21 +1469,28 @@ window.__ModuleLoader__.load({
             className: 'co-modal',
             role: 'dialog',
             'aria-modal': true,
-            'aria-label': '添加 MCP',
+            'aria-label': title || '添加 MCP',
             onClick: (event) => event.stopPropagation(),
           },
           h(
             'div',
             { className: 'co-modal-hd' },
-            h(Badge, { color: '#64748b', text: '+', size: 40, fontSize: 20 }),
+            h(Badge, {
+              color: preset?.badgeColor || '#64748b',
+              text: preset?.badge || '+',
+              size: 40,
+              fontSize: 20,
+            }),
             h(
               'div',
               { style: { flex: 1 } },
-              h('div', { style: { fontSize: 16, fontWeight: 650 } }, '添加 MCP'),
+              h('div', { style: { fontSize: 16, fontWeight: 650 } }, title || (preset ? `安装 ${preset.name}` : '添加 MCP')),
               h(
                 'div',
                 { className: 'co-hint', style: { marginTop: 4 } },
-                '把 ~/.workbuddy/mcp.json 或别人给你的 mcpServers 配置整段贴进来，一次可以加多个。',
+                preset
+                  ? preset.summary || '参数已按模板填好，补上凭据即可连接。'
+                  : '把 ~/.workbuddy/mcp.json 或别人给你的 mcpServers 配置整段贴进来，一次可以加多个。',
               ),
             ),
             h('button', { className: 'co-close', onClick: onClose, 'aria-label': '关闭' }, '×'),
@@ -1387,6 +1529,30 @@ window.__ModuleLoader__.load({
                       h('option', { value: 'streamable-http' }, 'streamable-http（远程地址）'),
                     ),
                   ),
+                  creds.length
+                    ? h(
+                        'div',
+                        { key: 'creds', className: 'co-field' },
+                        h('span', { className: 'co-field-lb' }, '凭据（只写本机，不随连接同步）'),
+                        ...creds.map((item) =>
+                          h(
+                            'div',
+                            { key: item.kind + ':' + item.key, style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 } },
+                            h('span', { style: { fontSize: 11.5, color: T.text3, width: 148, flexShrink: 0, fontFamily: T.mono } }, item.key),
+                            h('input', {
+                              className: 'co-input',
+                              style: { flex: 1, minWidth: 0 },
+                              type: item.secret ? 'password' : 'text',
+                              value: item.value,
+                              placeholder: item.placeholder || item.label,
+                              'aria-label': item.key,
+                              onChange: setCred(item.kind, item.key),
+                            }),
+                          ),
+                        ),
+                        h('span', { className: 'co-hint' }, '留空的字段不会写进配置；服务端需要它时会启动即报错。'),
+                      )
+                    : null,
                   isHttp
                     ? [
                         h(
@@ -1522,6 +1688,10 @@ window.__ModuleLoader__.load({
               manual ? '← 改贴 JSON' : '手动填写',
             ),
             h('span', { style: { flex: 1 } }),
+            // 模板要求凭据时给出明确提示，而不是让用户点下去吃一个启动错误。
+            preset && missingCred.length
+              ? h('span', { className: 'co-hint', style: { color: T.warn } }, `还差 ${missingCred.length} 项凭据：${missingCred.map((item) => item.key).join('、')}`)
+              : null,
             h(
               'button',
               {
@@ -1530,7 +1700,7 @@ window.__ModuleLoader__.load({
                 disabled: busy || (manual ? !form.serverName.trim() : jsonEmpty),
                 onClick: () => (manual ? submitForm() : onSubmit({ json: text })),
               },
-              busy ? '连接中…' : manual ? '连接' : '添加',
+              busy ? '连接中…' : manual ? (preset ? '安装并连接' : '连接') : '添加',
             ),
             h('button', { className: 'co-btn', onClick: onClose }, '取消'),
           ),
@@ -1538,13 +1708,270 @@ window.__ModuleLoader__.load({
       )
     }
 
-    function Connectors({ onCustomSwitch }) {
+    /* ── 我的 MCP：一行一个服务，展开看工具墙 ───────────────────────── */
+
+    /**
+     * 一条已经写进 Loader 的 mcp-client 行。
+     *
+     * 以前自定义连接是表格行、内置是卡片，两种形态混在一页里；现在统一成
+     * 这个组件（对齐宿主「MCP 服务管理」的列表观感）：左箭头展开工具、
+     * 中间名字与目标、右侧开关 + 删除。builtin / custom / external 只有
+     * 徽标颜色和「断开」语义不同。
+     */
+    function ServiceRow({ item, onToggle, onRemove, onOpenBuiltin, busy }) {
+      const [expanded, setExpanded] = useState(false)
+      const tools = item.tools || []
+      const off = item.disabled
+      const installed = tools.length > 0
+      return h(
+        'div',
+        { className: 'co-svc', 'data-off': off ? '1' : '0', 'data-open': expanded ? '1' : '0' },
+        h(
+          'div',
+          { className: 'co-svc-hd' },
+          h(
+            'button',
+            {
+              className: 'co-svc-caret',
+              'data-open': expanded ? '1' : '0',
+              'aria-label': expanded ? '收起工具' : '展开工具',
+              'aria-expanded': expanded,
+              onClick: () => setExpanded((value) => !value),
+              disabled: !installed,
+              title: installed ? `${tools.length} 个工具` : '连接成功但还没有注册工具：检查进程是否起来、凭据是否有效',
+            },
+            h(
+              'svg',
+              { width: 10, height: 10, viewBox: '0 0 10 10', fill: 'none', 'aria-hidden': true },
+              h('path', { d: 'M3 1.5 L7 5 L3 8.5', stroke: 'currentColor', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round' }),
+            ),
+          ),
+          h('span', { className: 'co-svc-badge', style: { background: item.badgeColor } }, item.badge),
+          h(
+            'div',
+            { className: 'co-svc-main' },
+            h(
+              'div',
+              { className: 'co-svc-name' },
+              h('span', { style: { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, item.name),
+              h('span', { className: 'co-live', style: { background: off ? T.caption : T.success } }),
+              item.origin === 'builtin' ? null : h('span', { className: 'co-tag' }, item.origin === 'custom' ? '自定义' : '外部'),
+            ),
+            h('div', { className: 'co-svc-sub', title: item.target }, item.target || item.serverName),
+          ),
+          h(
+            'div',
+            { className: 'co-svc-act' },
+            /* 工具数只作参考：面板的 tools 视角是宿主全局作用域，而 MCP 工具可能注册在
+             * 具体会话作用域里，于是这里读到 0 并不等于连接坏了（旧面板一直显示 0 就是
+             * 这个原因）。所以 0 用灰色中性文案，不用警告色，避免误判成故障。
+             * 有数字时用 tabular-nums 对齐，扫一列时数字位不会跳。 */
+            h(
+              'span',
+              {
+                className: 'co-chip',
+                'data-solid': '1',
+                style: { fontVariantNumeric: 'tabular-nums' },
+                title: item.toolCount
+                  ? `已注册 ${item.toolCount} 个工具`
+                  : '当前视角看不到已注册工具：可能是作用域可见性，也可能是子进程尚未就绪',
+              },
+              item.toolCount ? `${item.toolCount} 个工具` : '工具数不可见',
+            ),
+            item.origin === 'builtin'
+              ? h(
+                  'button',
+                  { className: 'co-icon-btn', title: '连接详情 / 登录 / 令牌', 'aria-label': '连接详情', onClick: () => onOpenBuiltin?.(item) },
+                  '⋯',
+                )
+              : null,
+            h('button', {
+              className: 'co-switch',
+              'data-on': off ? '0' : '1',
+              role: 'switch',
+              'aria-checked': !off,
+              'aria-label': off ? '启用' : '停用',
+              title: off ? '启用' : '停用',
+              disabled: busy,
+              onClick: () => onToggle(item, off),
+            }),
+            // 外部行不归本插件管：删除按钮禁用，标题说明去哪儿删。
+            h('button', {
+              className: 'co-icon-btn',
+              title: item.origin === 'external' ? '这条连接不是本插件建的，请在创建它的插件里删除' : '删除这条连接',
+              'aria-label': '删除',
+              disabled: busy || item.origin === 'external',
+              onClick: () => onRemove(item),
+            },
+            h(
+              'svg',
+              { width: 13, height: 13, viewBox: '0 0 16 16', fill: 'none', 'aria-hidden': true },
+              h('path', { d: 'M2.5 4h11M6 4V2.6h4V4M4 4l.7 9.1A1.2 1.2 0 0 0 5.9 14.3h4.2a1.2 1.2 0 0 0 1.2-1.2L12 4', stroke: 'currentColor', strokeWidth: 1.3, strokeLinecap: 'round', strokeLinejoin: 'round' }),
+            )),
+          ),
+        ),
+        expanded
+          ? h(
+              'div',
+              { className: 'co-svc-tools' },
+              ...tools.slice(0, 120).map((tool) =>
+                h('span', { key: tool.name, className: 'co-tool-tag', title: tool.description || tool.name }, tool.rawName),
+              ),
+              tools.length > 120 ? h('span', { className: 'co-tag' }, `+${tools.length - 120}`) : null,
+            )
+          : null,
+      )
+    }
+
+    /* ── MCP Hub：预置模板目录 ─────────────────────────────────────── */
+
+    function HubCard({ item, installed, onPick }) {
+      return h(
+        'div',
+        {
+          className: 'co-hub-card',
+          role: 'button',
+          tabIndex: 0,
+          'aria-label': `安装 ${item.name}`,
+          onClick: () => onPick(item),
+          onKeyDown: (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault()
+              onPick(item)
+            }
+          },
+        },
+        h(Badge, { color: item.badgeColor, text: item.badge, size: 36, radius: 9, fontSize: 13 }),
+        h(
+          'div',
+          { className: 'co-hub-main' },
+          h(
+            'div',
+            { className: 'co-hub-name' },
+            h('span', { style: { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, item.name),
+            h('span', { className: 'co-hub-vendor' }, item.vendor),
+          ),
+          h('div', { className: 'co-hub-desc' }, item.summary),
+          h(
+            'div',
+            { className: 'co-hub-ft' },
+            installed ? h(Chip, { tone: 'ok' }, '已安装') : null,
+            h(Chip, null, item.transport === 'streamable-http' ? 'http' : 'stdio'),
+            (item.envKeys || []).length + (item.headerKeys || []).length > 0 ? h(Chip, { tone: 'warn' }, '需凭据') : null,
+            ...(item.tags || []).slice(0, 2).map((tag) => h('span', { key: tag, className: 'co-tag' }, tag)),
+          ),
+        ),
+      )
+    }
+
+    function Hub({ onPick }) {
+      const [data, setData] = useState(null)
+      const [error, setError] = useState(null)
+      const [query, setQuery] = useState('')
+      const [category, setCategory] = useState('')
+      // 已安装集合由本页自己取一次：Panel 的 /state 不含服务列表，别为这个再加一路订阅。
+      const [installed, setInstalled] = useState([])
+
+      useEffect(() => {
+        let alive = true
+        api('/hub')
+          .then((next) => alive && setData(next))
+          .catch((err) => alive && setError(err.message))
+        api('/connectors')
+          .then((next) => alive && setInstalled((next.services || []).map((item) => item.serverName)))
+          .catch(() => {})
+        return () => {
+          alive = false
+        }
+      }, [])
+
+      const items = data?.items || []
+      const categories = data?.categories || []
+      const keyword = query.trim().toLowerCase()
+      const filtered = items.filter((item) => {
+        if (category && item.category !== category) return false
+        if (!keyword) return true
+        const hay = [item.name, item.vendor, item.summary, item.serverName, ...(item.tags || [])].join(' ').toLowerCase()
+        return hay.includes(keyword)
+      })
+      const groups = new Map()
+      for (const item of filtered) {
+        if (!groups.has(item.category)) groups.set(item.category, [])
+        groups.get(item.category).push(item)
+      }
+      const ordered = [...categories.filter((name) => groups.has(name)), ...[...groups.keys()].filter((name) => !categories.includes(name))]
+
+      return h(
+        'div',
+        { className: 'co-body' },
+        h(
+          'div',
+          { className: 'co-hub-bar' },
+          h('input', {
+            className: 'co-input',
+            style: { width: 260 },
+            placeholder: '搜索 MCP 服务，如 filesystem、搜索、数据库',
+            'aria-label': '搜索 MCP 服务',
+            value: query,
+            onChange: (event) => setQuery(event.target.value),
+          }),
+          h(
+            'select',
+            {
+              className: 'co-input co-sel',
+              'aria-label': '按分类筛选',
+              style: { width: 132 },
+              value: category,
+              onChange: (event) => setCategory(event.target.value),
+            },
+            h('option', { value: '' }, '全部分类'),
+            ...categories.map((name) => h('option', { key: name, value: name }, name)),
+          ),
+          h('span', { style: { flex: 1 } }),
+          h('span', { className: 'co-hint', style: { fontVariantNumeric: 'tabular-nums' } }, `${filtered.length} / ${items.length}`),
+        ),
+        error ? h('div', { className: 'co-err' }, error) : null,
+        ...ordered.map((name) =>
+          h(
+            'div',
+            { key: name },
+            h(
+              'div',
+              { className: 'co-grp' },
+              h('span', null, name),
+              h('span', { className: 'co-grp-n' }, groups.get(name).length),
+            ),
+            h(
+              'div',
+              { className: 'co-hub-grid' },
+              ...groups.get(name).map((item) =>
+                h(HubCard, {
+                  key: item.id,
+                  item,
+                  installed: installed.includes(item.serverName || item.id),
+                  onPick: (picked) => onPick(picked),
+                }),
+              ),
+            ),
+          ),
+        ),
+        h(
+          'div',
+          { style: { fontSize: 11.5, color: T.caption, marginTop: 18, lineHeight: '1.7' } },
+          'Hub 只是可安装模板，不是「已核实的官方服务」清单。选中后参数会填进「添加 MCP」弹层，凭据只写本机；启动参数里的路径示例（D:/path/to/...）要自己改。',
+        ),
+      )
+    }
+
+    function Connectors({ presetSeed, onPresetConsumed }) {
       const [data, setData] = useState(null)
       const [error, setError] = useState(null)
       const [open, setOpen] = useState(null)
       const [seed, setSeed] = useState(null)
       const [customOpen, setCustomOpen] = useState(false)
+      const [preset, setPreset] = useState(null)
       const [busy, setBusy] = useState(false)
+      const [rowBusy, setRowBusy] = useState(null)
       const [customError, setCustomError] = useState(null)
       const mounted = useRef(true)
 
@@ -1570,6 +1997,15 @@ window.__ModuleLoader__.load({
         }
       }, [load])
 
+      // 从 Hub 点了一项：切到本页并直接把参数填进弹层，不用再点一次「手动填写」。
+      useEffect(() => {
+        if (!presetSeed) return
+        setPreset(presetSeed)
+        setCustomError(null)
+        setCustomOpen(true)
+        onPresetConsumed?.()
+      }, [presetSeed, onPresetConsumed])
+
       const submitCustom = useCallback(
         async (payload) => {
           setBusy(true)
@@ -1587,11 +2023,13 @@ window.__ModuleLoader__.load({
                 )
               } else {
                 setCustomOpen(false)
+                setPreset(null)
               }
               return
             }
             await api('/custom', { method: 'POST', body: JSON.stringify(payload) })
             setCustomOpen(false)
+            setPreset(null)
             await load()
           } catch (err) {
             setCustomError(err.message)
@@ -1625,32 +2063,55 @@ window.__ModuleLoader__.load({
         [load],
       )
 
-      const removeCustom = useCallback(
-        async (entryId) => {
+      const toggleService = useCallback(
+        async (item, disabled) => {
+          setRowBusy(item.entryId)
           try {
-            await api('/custom/remove', { method: 'POST', body: JSON.stringify({ entryId }) })
+            await api('/services/toggle', { method: 'POST', body: JSON.stringify({ entryId: item.entryId, enabled: disabled }) })
             await load()
           } catch (err) {
             setError(err.message)
+          } finally {
+            setRowBusy(null)
           }
         },
         [load],
       )
 
-      const toggleCustom = useCallback(
-        async (entryId, enabled) => {
+      const removeService = useCallback(
+        async (item) => {
+          setRowBusy(item.entryId)
           try {
-            await api('/custom/toggle', { method: 'POST', body: JSON.stringify({ entryId, enabled }) })
+            const result = await api('/services/remove', { method: 'POST', body: JSON.stringify({ entryId: item.entryId }) })
+            if (result.sticky) {
+              setError(`${item.name}：已删除。这是内置连接器，标记会保留，重启不会再自动长回来；需要时到下方「可一键连接」重新连。`)
+            }
             await load()
           } catch (err) {
             setError(err.message)
+          } finally {
+            setRowBusy(null)
           }
         },
         [load],
+      )
+
+      const openBuiltinDetail = useCallback(
+        (service) => {
+          // 按 serverName 找，不按 entryId 反推：内置行的 id 可能是
+          // chatops-conn-<id>，也可能是 patch 里的 include:chatops-mcp-<id>。
+          const item = (data?.builtins || []).find(
+            (entry) => entry.serverName === service.serverName || entry.id === service.serverName,
+          )
+          if (item) setOpen(item)
+        },
+        [data],
       )
 
       const builtins = data?.builtins || []
-      const custom = data?.custom || []
+      const services = data?.services || []
+      const pending = builtins.filter((item) => !item.connected)
+      const installedServers = services.map((item) => item.serverName)
 
       return h(
         'div',
@@ -1664,96 +2125,127 @@ window.__ModuleLoader__.load({
               h('span', null, `当前已启用 ${data.enabledToolTotal} 个 MCP 工具，超过 80 个可能影响回复质量。建议停用不常用的连接。`),
             )
           : null,
+        /* node 体检：连接「全绿但工具恒为 0」最常见的根因是 PATH 上的 node 太老
+         * （ESM + import.meta.url 需要 18+），这里直接把它摆出来。 */
+        data && data.node && !data.node.ok
+          ? h(
+              'div',
+              { className: 'co-warnbar', style: { borderColor: T.error } },
+              h('span', { style: { color: T.error } }, '✕'),
+              h(
+                'span',
+                null,
+                `启动 MCP 子进程用的 node 版本过低：${data.node.command}${data.node.version ? '（' + data.node.version + '）' : ''}，需要 ≥ ${data.node.minMajor}。` +
+                  (data.node.fromPath && data.node.fromPathVersion ? ` PATH 上的 node 是 ${data.node.fromPathVersion}。` : '') +
+                  '用 CHATOPS_NODE_BIN 指到一个 18+ 的 node，或调整 PATH 顺序。',
+              ),
+            )
+          : null,
+        /* 统计条：三个数字 + 右侧动作。数字给权重、标签给语义，不再是一排同权重的 chip。 */
         h(
           'div',
-          { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, flexWrap: 'wrap' } },
-          h(Chip, { tone: 'brand', solid: true }, `已连接 ${data?.connectedCount ?? 0}`),
-          h(Chip, null, `注册工具 ${data?.enabledToolTotal ?? 0}`),
-          h(Chip, null, `MCP 行 ${data?.totalMcpEntries ?? 0}`),
-          h('span', { style: { flex: 1 } }),
-          h('button', { className: 'co-btn', 'data-variant': 'primary', onClick: () => setCustomOpen(true) }, '+ 添加 MCP'),
-          h('button', { className: 'co-btn', onClick: load }, '刷新'),
-        ),
-        h('div', { className: 'co-sec', style: { marginTop: 4 } }, '内置'),
-        h(
-          'div',
-          { className: 'co-wall' },
-          ...builtins.map((item) =>
-            h(ConnectorCard, {
-              key: item.id,
-              item,
-              busy: busy === item.id,
-              onOpen: setOpen,
-              onPlus: quickConnect,
-            }),
+          { className: 'co-stats' },
+          h(
+            'div',
+            { className: 'co-stat' },
+            h('span', { className: 'co-stat-num', 'data-tone': (data?.connectedCount ?? 0) > 0 ? 'brand' : undefined }, String(data?.connectedCount ?? 0)),
+            h('span', { className: 'co-stat-lb' }, '已启用'),
+          ),
+          h(
+            'div',
+            { className: 'co-stat' },
+            h('span', { className: 'co-stat-num', 'data-tone': data?.warnOverload ? 'warn' : undefined }, String(data?.enabledToolTotal ?? 0)),
+            h('span', { className: 'co-stat-lb' }, '注册工具'),
+          ),
+          h(
+            'div',
+            { className: 'co-stat' },
+            h('span', { className: 'co-stat-num' }, String(data?.totalMcpEntries ?? 0)),
+            h('span', { className: 'co-stat-lb' }, 'MCP 行'),
+          ),
+          h('span', { className: 'co-stat-grow' }),
+          h(
+            'div',
+            { className: 'co-stat-act' },
+            h(
+              'button',
+              {
+                className: 'co-btn',
+                'data-variant': 'primary',
+                onClick: () => {
+                  setPreset(null)
+                  setCustomError(null)
+                  setCustomOpen(true)
+                },
+              },
+              '+ 添加 MCP',
+            ),
+            h('button', { className: 'co-btn', onClick: load }, '刷新'),
           ),
         ),
-        custom.length
+        h(
+          'div',
+          { className: 'co-sec', style: { display: 'flex', alignItems: 'center', gap: 8, marginTop: 0 } },
+          h('span', null, `我的 MCP（${services.length}）`),
+          data?.node && data.node.ok
+            ? h('span', { className: 'co-hint', style: { textTransform: 'none', letterSpacing: 0, fontWeight: 400 } }, `node ${data.node.version}`)
+            : null,
+        ),
+        services.length
+          ? h(
+              'div',
+              { className: 'co-svc-list' },
+              ...services.map((item) =>
+                h(ServiceRow, {
+                  key: item.entryId,
+                  item,
+                  busy: rowBusy === item.entryId,
+                  onToggle: toggleService,
+                  onRemove: removeService,
+                  onOpenBuiltin: openBuiltinDetail,
+                }),
+              ),
+            )
+          : h('div', { className: 'co-empty' }, '还没有任何 MCP 连接。点「+ 添加 MCP」，或在下面的列表里连一个内置连接器。'),
+        pending.length
           ? [
-              h('div', { key: 'sech', className: 'co-sec' }, `自定义（${custom.length}）`),
+              h('div', { key: 'pendh', className: 'co-sec' }, '可一键连接'),
               h(
                 'div',
-                { key: 'secl', className: 'co-tbl-wrap' },
-                h(
-                  'table',
-                  { className: 'co-tbl' },
-                  h(
-                    'thead',
-                    null,
-                    h(
-                      'tr',
-                      null,
-                      h('th', { style: { width: 150 } }, 'serverName'),
-                      h('th', { style: { width: 92 } }, '传输'),
-                      h('th', null, '目标'),
-                      h('th', { style: { width: 62 } }, '工具'),
-                      h('th', { style: { width: 128 } }, '操作'),
-                    ),
-                  ),
-                  h(
-                    'tbody',
-                    null,
-                    ...custom.map((item) =>
-                      h(
-                        'tr',
-                        { key: item.entryId },
-                        h('td', { className: 'co-mono' }, item.serverName),
-                        h('td', null, item.transport === 'streamable-http' ? 'http' : 'stdio'),
-                        h('td', { className: 'co-mono', style: { wordBreak: 'break-all' } }, item.target || '—'),
-                        h('td', null, String(item.toolCount || 0)),
-                        h(
-                          'td',
-                          null,
-                          h(
-                            'div',
-                            { style: { display: 'flex', gap: 6 } },
-                            h(
-                              'button',
-                              { className: 'co-btn', 'data-size': 'sm', onClick: () => toggleCustom(item.entryId, item.disabled) },
-                              item.disabled ? '启用' : '停用',
-                            ),
-                            h(
-                              'button',
-                              { className: 'co-btn', 'data-size': 'sm', onClick: () => removeCustom(item.entryId) },
-                              '删除',
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+                { key: 'pendl', className: 'co-wall' },
+                ...pending.map((item) =>
+                  h(ConnectorCard, {
+                    key: item.id,
+                    item,
+                    busy: busy === item.id,
+                    onOpen: setOpen,
+                    onPlus: quickConnect,
+                  }),
                 ),
               ),
             ]
           : null,
         h(
           'div',
-          { style: { fontSize: 11.5, color: T.caption, marginTop: 14, lineHeight: '18px' } },
-          '连接会写进 Loader（一行 @deepseek-ai/dsh-mcp-client），工具名形如 mcp__dingtalk__*；同时记到 ~/.dsh/chatops/connections.json，重启后按它重建。断开即删除那一行。',
+          { style: { fontSize: 11.5, color: T.caption, marginTop: 14, lineHeight: '1.7', maxWidth: '78ch' } },
+          '每条连接都是 Loader 里的一行 @deepseek-ai/dsh-mcp-client；启停与配置记在 ~/.dsh/chatops/connections.json，重启后按它重建。',
         ),
         open ? h(ConnectModal, { item: open, onClose: () => { setOpen(null); setSeed(null) }, onChanged: load, deviceSeed: seed && seed.id === open.id ? seed.device : null }) : null,
         customOpen
-          ? h(JsonModal, { onClose: () => setCustomOpen(false), onSubmit: submitCustom, busy, error: customError })
+          ? h(JsonModal, {
+              // key 跟模板走：Hub 里换一项时强制重挂，否则表单还停在上一次的初值。
+              key: preset ? preset.id || preset.serverName : 'manual',
+              preset,
+              title: preset ? `安装 ${preset.name}` : undefined,
+              onClose: () => {
+                setCustomOpen(false)
+                setPreset(null)
+                setCustomError(null)
+              },
+              onSubmit: submitCustom,
+              busy,
+              error: customError,
+            })
           : null,
       )
     }
@@ -1761,7 +2253,8 @@ window.__ModuleLoader__.load({
     /* ── 主面板 ─────────────────────────────────────────────────────── */
 
     const TABS = [
-      { id: 'connectors', label: '连接器' },
+      { id: 'connectors', label: '我的 MCP' },
+      { id: 'hub', label: 'MCP Hub' },
       { id: 'overview', label: '概览' },
       { id: 'catalog', label: 'CLI 目录' },
       { id: 'tools', label: '工具预览' },
@@ -1772,6 +2265,8 @@ window.__ModuleLoader__.load({
       const [state, setState] = useState(null)
       const [error, setError] = useState(null)
       const [refreshing, setRefreshing] = useState(false)
+      // Hub → 添加 MCP 的交接：Hub 里选中一项后，切回「我的 MCP」并把模板塞进弹层。
+      const [presetSeed, setPresetSeed] = useState(null)
       const mounted = useRef(true)
 
       const loadState = useCallback(async (force) => {
@@ -1798,8 +2293,17 @@ window.__ModuleLoader__.load({
         }
       }, [loadState])
 
+      const consumePreset = useCallback(() => setPresetSeed(null), [])
+
+      const pickFromHub = useCallback((item) => {
+        // install（hubInstallPayload 的产物）放后面：模板算出来的 command / args / url
+        // 才是权威值。反过来的话，item 上缺字段时弹层会静默退回空表单。
+        setPresetSeed({ ...item, ...(item.install || {}) })
+        setTab('connectors')
+      }, [])
+
       const subtitle = state
-        ? `三条连接 · 缓存 ${state.cacheDir} · TTL ${state.cacheTtlMs ? Math.round(state.cacheTtlMs / 3600000) + ' h' : '—'}`
+        ? `统一管理 MCP 服务 · 缓存 ${state.cacheDir} · TTL ${state.cacheTtlMs ? Math.round(state.cacheTtlMs / 3600000) + ' h' : '—'}`
         : '正在读取宿主状态…'
 
       return h(
@@ -1823,7 +2327,7 @@ window.__ModuleLoader__.load({
           h(
             'div',
             { className: 'co-hd' },
-            h('div', { className: 'co-title' }, '钉钉 / 飞书 / 飞书项目 MCP'),
+            h('div', { className: 'co-title' }, 'MCP 服务管理'),
             h('div', { className: 'co-sub' }, subtitle),
           ),
         ),
@@ -1841,7 +2345,8 @@ window.__ModuleLoader__.load({
               )
             : null,
         ),
-        tab === 'connectors' ? h(Connectors, null) : null,
+        tab === 'connectors' ? h(Connectors, { presetSeed, onPresetConsumed: consumePreset }) : null,
+        tab === 'hub' ? h(Hub, { onPick: pickFromHub }) : null,
         tab === 'overview' ? h(Overview, { state, refreshing, onRefresh: loadState }) : null,
         tab === 'catalog' ? h(Catalog, { initialSurface: 'dingtalk' }) : null,
         tab === 'tools' ? h(ToolPreview, { initialSurface: 'dingtalk' }) : null,
@@ -1891,7 +2396,7 @@ window.__ModuleLoader__.load({
         // 入口一：左侧栏图标
         ctx.slots.inject('sidebar.panellist', function* () {
           yield ctx.slots.register(
-            { name: 'sidebar.panellist', id: 'chatops-mcp', order: 3, label: () => '钉钉/飞书连接器' },
+            { name: 'sidebar.panellist', id: 'chatops-mcp', order: 3, label: () => 'MCP 服务管理' },
             SidebarIcon,
           )
         })
@@ -1907,7 +2412,7 @@ window.__ModuleLoader__.load({
         // 入口三：设置页里也能进（与 memory-panel 一致，同一份组件复用）
         ctx.slots.inject('settings.section', function* () {
           yield ctx.slots.register(
-            { name: 'settings.section', id: 'chatops-mcp', order: 45, label: () => '钉钉/飞书连接器' },
+            { name: 'settings.section', id: 'chatops-mcp', order: 45, label: () => 'MCP 服务管理' },
             () => h('div', { style: { height: '100%', overflow: 'hidden' } }, h(Panel)),
           )
         })

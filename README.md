@@ -1,6 +1,6 @@
 # dsh-chatops-mcp
 
-把**钉钉**、**飞书**、**飞书项目（Meego）**接成三个 MCP 工具服务器，挂进 DeepSeek Harness。
+DSH 的 **MCP 服务管理面板 + MCP Hub**：统一管理任意 MCP 服务，并把**钉钉**、**飞书**、**飞书项目（Meego）**接成三个开箱可用的工具服务器。
 
 - npm：`dsh-chatops-mcp`
 - 源码 / issue：https://github.com/li-shaozhe/dsh-chatops-mcp
@@ -11,9 +11,9 @@
 | `feishu` | `mcp__feishu__*` | 本包 `server.js feishu`，包装 `lark-cli` | `%USERPROFILE%\.lark-cli` 已有登录 |
 | `meego` | `mcp__meego__*` | **官方** `@lark-project/mcp`（48 工具），经 `meego-launch.js` 注入 token | `%USERPROFILE%\.dsh\chatops\meego\.env` |
 
-钉钉和飞书复用本机已有 CLI 登录态，零新增应用密钥；飞书项目直接用官方服务器，不自己实现 Open API。
+钉钉和飞书复用本机已有 CLI 登录态，零新增应用密钥；飞书项目直接用官方服务器，不自己实现 Open API。这三条只是内置项，面板本身与它们无关：任何 `mcp-client` 行都能在同一张列表里管理和启停，Hub 里还有 21 个可安装模板（文件系统、Git、GitHub、数据库、浏览器、Notion、Slack…）。
 
-装完左侧栏会多一个「钉钉/飞书连接器」（order 3），点开就是连接器卡片墙 —— 点 `+` 就写 MCP 配置、缺 CLI 就地装、缺登录走设备码授权。见 [安装](#安装) 与 [连接器](#连接器)。
+装完左侧栏会多一个「MCP 服务管理」（order 3），点开是统一服务列表 —— 每行可展开看工具名、可开关、可删除，`+ 添加 MCP` 支持贴 `mcpServers` JSON 或手填表单。见 [安装](#安装) 与 [面板](#面板)。
 
 ## 工具面跟着 CLI 升级走
 
@@ -197,18 +197,45 @@ loader.remove(entryId)                                      // 断开连接
 
 | 入口 | 座位 | 说明 |
 |---|---|---|
-| 左侧栏图标 | `sidebar.panellist`，`id=chatops-mcp`，`order=3` | 排在「插件」「插件市场」「记忆与人设」之后，标签 `钉钉/飞书连接器` |
+| 左侧栏图标 | `sidebar.panellist`，`id=chatops-mcp`，`order=3` | 排在「插件」「插件市场」「记忆与人设」之后，标签 `MCP 服务管理` |
 | 主区域页面 | `main`，`key=chatops-mcp` | 点图标切过来 |
 | 设置页 | `settings.section`，`id=chatops-mcp`，`order=45` | 不占侧栏座位也能进 |
 
-四个页签：
+定位是**通用 MCP 服务管理面板 + MCP Hub**，不再只服务钉钉 / 飞书 / 飞书项目。
+
+五个页签：
 
 | 页签 | 内容 |
 |---|---|
-| 连接器 | 卡片墙 + 一键连接 + 贴 JSON 添加 MCP |
-| 概览 | 三条连接各一张卡：CLI 路径与版本、登录身份、组织/部门/邮箱、catalog 条数、已 materialise 数量与产品配比；飞书项目额外显示 server 入口、token 来源文件、脱敏 token 提示 |
+| 我的 MCP | 统一服务列表：每条 `mcp-client` 行一行（内置三条、面板添加的、别处写进 Loader 的都算），左箭头展开工具名清单，右侧开关 + 删除；底部「可一键连接」放还没连的内置连接器 |
+| MCP Hub | 预置模板目录，按分类分组（文件与代码 / 搜索与抓取 / 数据与存储 / 浏览器与自动化 / 办公与协作 / 分析工具），选中即把 command / args / url / 凭据字段填进「添加 MCP」弹层 |
+| 概览 | 三条内置连接各一张卡：CLI 路径与版本、登录身份、组织/部门/邮箱、catalog 条数、已 materialise 数量与产品配比；飞书项目额外显示 server 入口、token 来源文件、脱敏 token 提示 |
 | CLI 目录 | 直接浏览 `dws` / `lark-cli` 的完整 self-schema（1098 / 246 条），支持 surface 切换、关键词、product、effect 过滤；点任意行展开该命令的完整 flag 列表 |
 | 工具预览 | 输入 products / effect / max，预览「按当前配置会 materialise 出哪些工具」，改参数不用重装就能看效果 |
+
+### 服务列表里的三个 origin
+
+| origin | 含义 | 启停 | 删除 |
+|---|---|---|---|
+| `builtin` | 钉钉 / 飞书 / 飞书项目，由本包 `seedBuiltins` provision | 落盘 | 落盘（留 `removed` 标记，重启不会自动长回来） |
+| `custom` | 面板里加的（含 Hub 安装的） | 落盘 | 落盘 |
+| `external` | 别的插件或手写 patch 建的 `mcp-client` 行 | 只作用于本次进程，不落盘 | **不允许**（删了重启就回来，还会和拥有者冲突） |
+
+外部行只读可见是刻意的：它们是真实在跑的连接，隐瞒反而让人去别处瞎找。
+
+### node 版本：连接绿灯但工具数是 0 时先看这里
+
+MCP 子进程用 `nodeCommand()` 选出的 node 启动。它不会盲取 PATH 里的 `node`：
+
+1. `CHATOPS_NODE_BIN` 显式覆盖
+2. 非 Electron 时用宿主自己的 `process.execPath`
+3. PATH 里的 `node`，**先探版本，>= 18 才用**
+4. nvm / 常见安装目录里版本够的 node
+5. 都没有就退回 PATH 那个（报错会显示在面板上）
+
+为什么卡 18：`server.js` 是 ESM 且用 `import.meta.url` 推包内路径，Node 14 的默认加载器直接 `ERR_UNSUPPORTED_ESM_URL_SCHEME`，子进程起来就崩 —— 面板上表现为「连接是绿的、工具数永远是 0」。实测本机 PATH 上就是 Node 14，改之前三条连接工具数全是 0，改之后 47 / 45 / 48。
+
+面板会把选中的 node 与版本印在列表上方；不达标时直接弹红条，并显示 PATH 上那个 node 的版本。
 
 视觉与交互对齐宿主自带面板：
 
@@ -216,11 +243,15 @@ loader.remove(entryId)                                      // 断开连接
 - 搜索输入 180ms 防抖；目录行可键盘聚焦（`role=button` + `Enter`/`Space`）。
 - 静态样式（hover / transition / focus）走 `ctx.effect` 注入一张 `<style>`（`data-plugin-css='dsh-chatops-mcp/panel.css'`），动态值仍内联；主题 token 全部取 `@deepseek-ai/dsh-client-ui-theme` 实际定义的那套，不自造色值。
 
-概览 / CLI 目录 / 工具预览三个页签只读：不发消息、不改日程、不写任何远程状态。连接器页签会写本机 MCP 配置与 CLI 登录态，但不调用任何业务写接口。数据来自同进程内的 Host 路由：
+概览 / CLI 目录 / 工具预览三个页签只读：不发消息、不改日程、不写任何远程状态。我的 MCP / MCP Hub 页签会写本机 MCP 配置与 CLI 登录态，但不调用任何业务写接口。数据来自同进程内的 Host 路由：
 
 | 路由 | 说明 |
 |---|---|
-| `GET /chatops-mcp/connectors` | 内置连接器目录 + 本机状态 + 自定义连接 + 工具计数 |
+| `GET /chatops-mcp/connectors` | 统一服务列表（`services`）+ 内置连接器状态 + 自定义连接 + 工具计数 + node 体检 |
+| `GET /chatops-mcp/hub` | MCP Hub 模板目录（每项含可直接提交的 `install` 载荷） |
+| `POST /chatops-mcp/services/toggle` | 任意行启停（body `{"entryId":"...","enabled":false}`）；外部行 `persisted:false` |
+| `POST /chatops-mcp/services/remove` | 删除本包拥有的行；外部行返回 `reason:"external"` |
+| `POST /chatops-mcp/services/install-hub` | 按 Hub 模板建连接（body `{"id":"filesystem","overrides":{...}}`） |
 | `POST /chatops-mcp/connectors/connect` | 写一行 mcp-client（body `{"id":"dingtalk"}`） |
 | `POST /chatops-mcp/connectors/disconnect` | 删掉那一行 |
 | `POST /chatops-mcp/connectors/toggle` | 启用 / 停用（body `{"id":"dingtalk","enabled":false}`） |
@@ -238,6 +269,20 @@ loader.remove(entryId)                                      // 断开连接
 | `GET /chatops-mcp/schema?surface=&command=` | 单命令的参数详情 |
 | `GET /chatops-mcp/tools?surface=&products=&effect=&max=` | 预览动态工具名单 |
 | `POST /chatops-mcp/refresh` | 忽略缓存重读 CLI schema（body `{"surface":"dingtalk"}`） |
+
+### 自检脚本
+
+三个都不依赖 dsh 启动，改完面板先跑它们：
+
+```bash
+cd tools/dsh-chatops-mcp
+CHATOPS_CONNECTION_STORE=$TEMP/chatops-test-store.json node test-host.mjs   # 路由：/hub、services 增删改、安装、贴 JSON
+node test-hub.mjs                                                            # Hub 模板能否过 buildCustomConfig
+node test-render.mjs                                                         # 面板能否渲染 + co-* 类名是否都有定义
+node test-visual.mjs  # 生成 output/panel-*.html，再用 chrome --headless 截图
+```
+
+`test-host.mjs` 必须把这台机器的真实连接表指开（`CHATOPS_CONNECTION_STORE`），否则会写坏 `~/.dsh/chatops/connections.json`。
 
 面板作为 Host 插件 inject 了 `webServer` / `loader` / `tools` 三个服务；`loader` 拿不到时连接器会明确报「宿主没有提供 loader 服务」，不会静默失败。
 
@@ -362,12 +407,14 @@ npm --prefix /tmp/probe install dsh-chatops-mcp --no-fund --no-audit
 | `CHATOPS_WARM_TIMEOUT_MS` | `30000` | `initialize` 等 catalog 的上限 |
 | `CHATOPS_DWS_BIN` | 自动在全局前缀找 `vendor\dws.exe` | 覆盖 dws 路径（找不到时回退 `bin\dws.js` shim） |
 | `CHATOPS_LARK_BIN` | 自动在全局前缀找 `bin\lark-cli.exe` | 覆盖 lark-cli 路径（找不到时回退 `scripts\run.js` shim） |
+| `CHATOPS_NODE_BIN` | 按版本探测自动选（≥ 18） | 覆盖启动 MCP 子进程的 node。PATH 上是老版本 node 时用它指到 18+ |
+| `CHATOPS_CONNECTION_STORE` | `%USERPROFILE%\.dsh\chatops\connections.json` | 连接表位置。自检脚本必须指到临时文件，否则会写坏真实连接表 |
 | `CHATOPS_CLI_TIMEOUT_MS` | `60000` | 单次 CLI 超时 |
 | `CHATOPS_MEEGO_BIN` | 全局 `@lark-project/mcp/dist/index.js` | 官方服务器入口 |
 | `CHATOPS_MEEGO_ENV_FILE` | `%USERPROFILE%\.dsh\chatops\meego\.env` | 凭据文件路径 |
 | `CHATOPS_MEEGO_DOMAIN` | 官方默认 | 覆盖 `--domain` |
 | `CHATOPS_CONNECTION_STORE` | `%USERPROFILE%\.dsh\chatops\connections.json` | 连接表（跨重启恢复用） |
-| `CHATOPS_NODE_BIN` | PATH 里的 `node` | 写进 mcp-client 行 `command` 的 node 路径；不要让它落到 Electron 的 `DeepSeek Harness.exe` |
+| `CHATOPS_NODE_BIN` | 按版本探测自动选（≥ 18） | 写进 mcp-client 行 `command` 的 node 路径；不要让它落到 Electron 的 `DeepSeek Harness.exe`，也不要让它落到 < 18 的 node |
 | `CHATOPS_DEBUG` | 未设 | `1` 时输出 exec 日志到 stderr |
 
 内置默认产品集：钉钉 `contact calendar chat todo oa drive aisearch doc`，飞书 `im calendar task contact drive approval wiki docs`。
@@ -386,3 +433,5 @@ npm --prefix /tmp/probe install dsh-chatops-mcp --no-fund --no-audit
 - `installCli` 调的是 `npm install -g <pkg>`，会改本机全局 npm 前缀；不需要时用 `npm uninstall -g` 自行回退。装 CLI 有网络与磁盘副作用，面板会在按钮文案里写明包名。
 - 连接表里 `chatops-conn-meego` 的 config 不含令牌（令牌只存 `%USERPROFILE%\.dsh\chatops\meego\.env`）。自定义连接如果自己在 `env` 里填了密钥，那串值会明文写进 `connections.json` —— 这个文件在用户目录下、权限继承用户，别提交进 git。
 - 贴 JSON 建连只做语法校验，**不验证连通性**：URL 打不通、包名不存在也会建行成功，表现为该行 `toolCount` 恒为 0。要判断是否真连上，看面板卡片上的工具数。
+- 面板里服务行的工具数来自宿主 `tools.schemas()`（全局作用域视角）。MCP 工具若注册在具体会话作用域，这里可能读到 0 而连接其实正常，所以 0 显示成「工具数不可见」而不是报警。真正的失败先看 node 体检红条。
+- MCP Hub 是**可安装模板**，不是「已核实的官方服务」清单：每个模板的 command / args / URL 只描述怎么起进程或连地址，`probeStatus` 之类一律不声明。带路径示例的模板（`D:/path/to/workspace`）要用户自己改，否则服务起来也只会指向一个不存在的目录。

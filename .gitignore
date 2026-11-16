@@ -17,3 +17,6 @@ Thumbs.db
 connections.json
 .env
 .env.*
+
+# Panel preview HTML/PNG produced by test-visual.mjs
+output/

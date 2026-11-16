@@ -21,8 +21,8 @@
  *    否则 dsh 这种无控制台进程会闪黑窗口。
  */
 
-import { spawn } from 'node:child_process'
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { spawn, spawnSync } from 'node:child_process'
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -171,15 +171,110 @@ export function cliLocation(cliKind) {
  * 不能用 `process.execPath`：宿主跑在 Electron 里时它是 `DeepSeek Harness.exe`，
  * 把这个值写进 mcp-client 行的 `command` 会让子进程拿不到 node 语义（实测写出来的
  * command 就是 `D:\DeepSeek Harness\DeepSeek Harness.exe`，重启后起不来）。
- * 顺序：CHATOPS_NODE_BIN → PATH 里的 node → 非 Electron 时的 process.execPath。
+ *
+ * 也不能无条件用 PATH 里的 `node`：本机 PATH 上那个是 Node 14，而 server.js 是 ESM
+ * 且用 `import.meta.url` 推包内路径 —— Node 14 的默认加载器直接
+ * `ERR_UNSUPPORTED_ESM_URL_SCHEME`，子进程起来就崩，工具一个都注册不上（面板上表现为
+ * 连接是绿的、工具数永远是 0）。所以候选要按「能不能跑这个包」排序：
+ *
+ *   1. CHATOPS_NODE_BIN 显式覆盖
+ *   2. 宿主自己的 node 语义：非 Electron 时就是 process.execPath
+ *   3. PATH 里的 node —— 但先探一次版本，>= 18 才用
+ *   4. 常见 nvm / 官方安装目录里版本够的 node
+ *   5. 实在没有就退回 PATH 那个（至少有个能报错的东西，错误会显示在面板上）
  */
+let nodeCache = null
+
+function nodeVersion(bin) {
+  try {
+    const result = spawnSync(bin, ['-v'], { encoding: 'utf8', timeout: 8000, windowsHide: true })
+    const match = /v(\d+)\.(\d+)\.(\d+)/.exec(result.stdout || '')
+    if (!match) return null
+    return { major: Number(match[1]), minor: Number(match[2]), patch: Number(match[3]), text: match[0] }
+  } catch {
+    return null
+  }
+}
+
+function nvmCandidates() {
+  const out = []
+  const exts = process.platform === 'win32' ? ['node.exe', 'node'] : ['node']
+  const roots = []
+  if (process.env.NVM_HOME) roots.push(process.env.NVM_HOME)
+  if (process.env.NVM_SYMLINK) roots.push(dirname(process.env.NVM_SYMLINK))
+  if (process.env.CHATOPS_NODE_ROOTS) {
+    for (const item of process.env.CHATOPS_NODE_ROOTS.split(process.platform === 'win32' ? ';' : ':')) {
+      if (item.trim()) roots.push(item.trim())
+    }
+  }
+  if (process.platform === 'win32' && process.env.APPDATA) roots.push(join(process.env.APPDATA, 'nvm'))
+  else if (process.platform !== 'win32') roots.push(join(homedir(), '.nvm', 'versions', 'node'))
+  // 从 PATH 反推：nvm-windows 的 PATH 里通常有 <root>\nodejs（软链接）或 <root>\vX.Y.Z。
+  // 取每个 PATH 目录及其上一级作为候选根，避免写死盘符。
+  for (const dir of (process.env.PATH || '').split(process.platform === 'win32' ? ';' : ':')) {
+    if (!dir) continue
+    roots.push(dir, dirname(dir), dirname(dirname(dir)))
+  }
+
+  for (const root of roots) {
+    try {
+      if (!existsSync(root)) continue
+      const children = readdirSync(root).filter((name) => /^v\d+\./.test(name))
+      // 版本号大的优先
+      children.sort((a, b) => Number(b.slice(1).split('.')[0]) - Number(a.slice(1).split('.')[0]))
+      for (const child of children) {
+        for (const exe of exts) out.push(join(root, child, exe))
+      }
+    } catch {
+      /* 目录不可读就跳过 */
+    }
+  }
+  return out
+}
+
 export function nodeCommand() {
-  const override = process.env.CHATOPS_NODE_BIN
-  if (override && existsSync(override)) return override
+  if (nodeCache) return nodeCache
+  const MIN_MAJOR = 18
+  const candidates = []
+  if (process.env.CHATOPS_NODE_BIN) candidates.push(process.env.CHATOPS_NODE_BIN)
+  if (!process.versions.electron && process.execPath) candidates.push(process.execPath)
   const fromPath = findOnPath('node')
-  if (fromPath) return fromPath
-  if (!process.versions.electron) return process.execPath
-  return 'node'
+  if (fromPath) candidates.push(fromPath)
+  candidates.push(...nvmCandidates())
+
+  let fallback = null
+  for (const candidate of candidates) {
+    if (!candidate || !existsSync(candidate)) continue
+    if (fallback === null) fallback = candidate
+    const version = nodeVersion(candidate)
+    if (version && version.major >= MIN_MAJOR) {
+      nodeCache = candidate
+      return candidate
+    }
+  }
+  nodeCache = fallback || (process.versions.electron ? 'node' : process.execPath)
+  return nodeCache
+}
+
+/**
+ * 面板上用的「node 体检」：命令、版本够不够、为什么选了它。
+ * 连接全绿但工具恒为 0 时，第一个要看的就是这里。
+ */
+export function nodeDiagnostics() {
+  const command = nodeCommand()
+  const version = nodeVersion(command)
+  return {
+    command,
+    version: version?.text || null,
+    major: version?.major ?? null,
+    ok: Boolean(version && version.major >= 18),
+    minMajor: 18,
+    fromPath: findOnPath('node'),
+    fromPathVersion: (() => {
+      const pathNode = findOnPath('node')
+      return pathNode ? nodeVersion(pathNode)?.text || null : null
+    })(),
+  }
 }
 
 /**
@@ -917,7 +1012,27 @@ function writeStoreRaw(store) {
 /** 记下一条连接（config 里可能含 token，所以调用方必须自己脱敏后再传）。 */
 export function rememberEntry(entryId, { config, disabled = false }) {
   const store = readStoreRaw()
+  const previous = store.entries[entryId]
   store.entries[entryId] = { name: MCP_CLIENT_NAME, config, disabled: Boolean(disabled) }
+  // 之前被「删除」压过的内置行，重新连接时就该复活。
+  if (previous?.removed) delete store.entries[entryId].removed
+  writeStoreRaw(store)
+  return entryId
+}
+
+/**
+ * 记住「这条内置连接被用户删了」。
+ *
+ * 内置三条是 `seedBuiltins()` 在每次启动时按前置条件自动补的：只要 CLI 还装着，
+ * 删掉行、重启又会长回来 —— 面板上表现为「删了没用」。所以删除要在 store 里留
+ * 一个 `removed` 标记，seedBuiltins 跳过它；用户再次点连接时 rememberEntry 会把这个
+ * 标记清掉。
+ *
+ * config 置 null：不保留旧配置，重新连接时按 CATALOG 现算。
+ */
+export function rememberRemoved(entryId) {
+  const store = readStoreRaw()
+  store.entries[entryId] = { name: MCP_CLIENT_NAME, config: null, disabled: true, removed: true }
   writeStoreRaw(store)
   return entryId
 }
@@ -1005,6 +1120,11 @@ export async function seedBuiltins(loader) {
         continue
       }
       const entryId = resolveConnectorEntry(connector, collectMcpEntries(loader))?.entryId || `${ENTRY_PREFIX}${connector.id}`
+      // 用户主动删过的内置行不要再自动长回来（否则「删除」在面板上等于没生效）。
+      if (store.entries[entryId]?.removed) {
+        report.skipped.push(connector.id)
+        continue
+      }
       const disabled = Boolean(store.entries[entryId]?.disabled)
       // 配置一律按 CATALOG 现算，不沿用 store 里存的那份 —— 否则升级后改的默认值
       // （比如把 CHATOPS_TOOL_EFFECT 从 read 改成 all）永远追不上老用户。
@@ -1036,6 +1156,8 @@ export async function rehydrate(loader) {
   let dirty = false
   for (const [entryId, record] of Object.entries(store.entries)) {
     if (!record || record.name !== MCP_CLIENT_NAME) continue
+    // 被用户删除的内置行：记录保留（阻止 seedBuiltins 复活），但不重建进 Loader。
+    if (record.removed) continue
     try {
       // store 里可能还躺着旧版本写进去的错误 command（Electron 的 execPath），先纠正。
       const config = fixNodeCommand(record.config)

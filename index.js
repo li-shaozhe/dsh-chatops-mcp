@@ -20,7 +20,8 @@
  *   GET  /chatops-mcp/tools              preview which entries become real MCP tools
  *   POST /chatops-mcp/refresh            re-read a CLI catalog and rewrite the cache
  *
- *   GET  /chatops-mcp/connectors         内置连接器目录 + 本机状态 + 自定义连接
+ *   GET  /chatops-mcp/hub                 MCP Hub 预置目录（可安装模板 + 分类）
+ *   GET  /chatops-mcp/connectors         内置连接器目录 + 本机状态 + 自定义连接（统一成 services）
  *   POST /chatops-mcp/connectors/connect     写一行 mcp-client（连接）
  *   POST /chatops-mcp/connectors/disconnect  删掉那一行（断开连接）
  *   POST /chatops-mcp/connectors/toggle      启用 / 停用
@@ -46,9 +47,9 @@ import {
   buildCustomConfig,
   collectMcpEntries,
   connectorState,
+  nodeDiagnostics,
   countToolsByServer,
-  customEntryId,
-  customState,
+  customEntryId,  customState,
   entryExists,
   parseMcpJson,
   resolveConnectorEntry,
@@ -69,10 +70,12 @@ import {
   rehydrate,
   rememberEnabled,
   rememberEntry,
+  rememberRemoved,
   seedBuiltins,
   storeFile,
   CUSTOM_PREFIX,
 } from './connectors.js'
+import { HUB, HUB_CATEGORIES, findHubItem, hubInstallPayload } from './hub.js'
 import {
   discoverDingTalk,
   discoverFeishu,
@@ -237,27 +240,152 @@ function toolCounts(ctx) {
   return countToolsByServer(tools)
 }
 
+/**
+ * 每个 serverName 注册了哪些工具，附带 description 与 effect 猜测。
+ * 面板的「我的 MCP」要能在卡片里直接展开工具清单（参考宿主连接器页的
+ * 「10/10 个工具已启用」+ 标签墙），所以这里一次把名字捞出来。
+ */
+function toolsByServer(ctx) {
+  const tools = ctx.get('tools')
+  const out = {}
+  if (!tools) return out
+  try {
+    for (const schema of tools.schemas()) {
+      const match = /^mcp__([A-Za-z0-9_-]+?)__(.+)$/.exec(schema.name || '')
+      if (!match) continue
+      const [, server, raw] = match
+      if (!out[server]) out[server] = []
+      out[server].push({
+        name: schema.name,
+        rawName: raw,
+        description: String(schema.description || '').slice(0, 260),
+      })
+    }
+  } catch {
+    /* tools 服务不可用时返回空表 */
+  }
+  for (const key of Object.keys(out)) out[key].sort((a, b) => a.rawName.localeCompare(b.rawName))
+  return out
+}
+
+/**
+ * 把 loader 里的 mcp-client 行统一成「服务」列表。
+ *
+ * 面板不再区分「内置 / 自定义」两种展示形态（自定义以前是一条表格行，
+ * 卡片墙里没有它，看起来像两个产品）。统一后每条连接都是一个卡片：
+ *   origin: builtin（钉钉 / 飞书 / 飞书项目）| custom（面板添加）| external（别处写的行）
+ */
+function toService({ entryId, entryId0, config, disabled, origin, builtin, tools }) {
+  const serverName = config?.serverName || entryId0 || entryId
+  const transport = config?.transport || 'stdio'
+  const target =
+    transport === 'streamable-http'
+      ? config?.url || ''
+      : [config?.command, ...(Array.isArray(config?.args) ? config.args : [])].filter(Boolean).join(' ')
+  const list = tools?.[serverName] || []
+  return {
+    entryId,
+    serverName,
+    origin,
+    transport,
+    target,
+    disabled: Boolean(disabled),
+    connected: true,
+    toolCount: list.length,
+    tools: list,
+    envKeys: config?.env && typeof config.env === 'object' ? Object.keys(config.env) : [],
+    headerKeys: config?.headers && typeof config.headers === 'object' ? Object.keys(config.headers) : [],
+    cwd: config?.cwd || null,
+    toolCallTimeoutMs: config?.toolCallTimeoutMs || null,
+    name: builtin?.name || serverName,
+    vendor: builtin?.vendor || (origin === 'custom' ? '自定义' : '外部连接'),
+    category: builtin?.category || (origin === 'builtin' ? '办公协作' : '自定义'),
+    badge: builtin?.badge || String(serverName).slice(0, 2).toUpperCase(),
+    badgeColor: builtin?.badgeColor || '#475569',
+    summary: builtin?.summary || target || '本机 MCP 连接',
+    homepage: builtin?.homepage || null,
+    kind: builtin?.kind || (origin === 'builtin' ? 'cli' : 'custom'),
+  }
+}
+
 function connectorsPayload(ctx) {
   const entries = mcpEntries(ctx)
   const counts = toolCounts(ctx)
+  const byServer = toolsByServer(ctx)
   const builtins = CATALOG.map((connector) => connectorState(connector, entries, counts))
   const custom = []
-  for (const [entryId, options] of entries) {
-    if (!entryId.startsWith(CUSTOM_PREFIX)) continue
-    custom.push(customState(entryId, options, counts))
+  const services = []
+  const seen = new Set()
+
+  for (const connector of CATALOG) {
+    const state = connectorState(connector, entries, counts)
+    if (!state.connected) continue
+    const resolved = resolveConnectorEntry(connector, entries)
+    if (!resolved) continue
+    seen.add(resolved.entryId)
+    services.push(
+      toService({
+        entryId: resolved.entryId,
+        config: resolved.options?.config,
+        disabled: resolved.options?.disabled,
+        origin: 'builtin',
+        builtin: connector,
+        tools: byServer,
+      }),
+    )
   }
-  const connectedCount = builtins.filter((item) => item.connected && item.enabled).length
-  const enabledToolTotal = [...builtins.map((item) => item.toolCount), ...custom.filter((c) => !c.disabled).map((c) => c.toolCount)]
-    .reduce((sum, value) => sum + (Number(value) || 0), 0)
+
+  for (const [entryId, options] of entries) {
+    if (entryId.startsWith(CUSTOM_PREFIX)) {
+      custom.push(customState(entryId, options, counts))
+      if (!seen.has(entryId)) {
+        seen.add(entryId)
+        services.push(
+          toService({
+            entryId,
+            config: options?.config,
+            disabled: options?.disabled,
+            origin: 'custom',
+            tools: byServer,
+          }),
+        )
+      }
+      continue
+    }
+    if (seen.has(entryId)) continue
+    // 别的插件 / 用户手写在 patch 里的 mcp-client 行：也要能看见、能开关，
+    // 否则「MCP 服务管理」这个定位就只覆盖自己建的那几条。
+    seen.add(entryId)
+    services.push(
+      toService({
+        entryId,
+        config: options?.config,
+        disabled: options?.disabled,
+        origin: 'external',
+        tools: byServer,
+      }),
+    )
+  }
+
+  services.sort((a, b) => {
+    if (a.disabled !== b.disabled) return a.disabled ? 1 : -1
+    if (b.toolCount !== a.toolCount) return b.toolCount - a.toolCount
+    return a.serverName.localeCompare(b.serverName)
+  })
+
+  const connectedCount = services.filter((item) => !item.disabled).length
+  const enabledToolTotal = services.filter((item) => !item.disabled).reduce((sum, item) => sum + (item.toolCount || 0), 0)
   return {
     builtins,
     custom,
+    services,
     connectedCount,
     enabledToolTotal,
     warnOverload: enabledToolTotal > 80,
     totalMcpEntries: entries.size,
     storeFile: storeFile(),
     rehydrate: rehydrateReport,
+    node: nodeDiagnostics(),
   }
 }
 
@@ -362,7 +490,9 @@ async function disconnectConnector(ctx, payload, { prefix = ENTRY_PREFIX } = {})
     const existing = resolveConnectorEntry(connector, collectMcpEntries(loader))
     if (!existing) return { ok: true, removed: false, entryId: null }
     const removed = removeEntry(loader, existing.entryId)
-    if (removed) forgetEntry(existing.entryId)
+    // 留「已删除」标记：内置行每次启动都会被 seedBuiltins 按前置条件补回，
+    // 只删记录的话面板上表现为「断开后又自己连上了」。
+    if (removed) rememberRemoved(existing.entryId)
     return { ok: true, removed, entryId: existing.entryId }
   }
 
@@ -689,6 +819,66 @@ async function handle(req, ctx) {
 
   if (method === 'POST' && sub === '/custom/toggle') {
     return { status: 200, body: await toggleConnector(ctx, await readJson(), { prefix: CUSTOM_PREFIX }) }
+  }
+
+  /* ── MCP Hub ────────────────────────────────────────────────────── */
+
+  if (method === 'GET' && sub === '/hub') {
+    return {
+      status: 200,
+      body: {
+        categories: HUB_CATEGORIES,
+        items: HUB.map((item) => ({ ...item, install: hubInstallPayload(item) })),
+        total: HUB.length,
+      },
+    }
+  }
+
+  /* ── 统一服务：任意 mcp-client 行的启停 / 删除 ──────────────────── */
+
+  if (method === 'POST' && sub === '/services/toggle') {
+    const payload = await readJson()
+    const entryId = String(payload?.entryId || '')
+    if (!entryId) throw new Error('缺少 entryId')
+    const loader = requireLoader(ctx)
+    if (!entryExists(loader, entryId)) throw new Error(`没有这条连接：${entryId}`)
+    const enabled = payload?.enabled === undefined ? true : Boolean(payload.enabled)
+    await setEntryEnabled(loader, entryId, enabled)
+    // 只对本插件拥有的前缀落盘。外部行（别的插件 / 手写 patch 建的）改启停只作用于本次
+    // 进程：把它们的 config 抄进我们的 store，重启时就会替对方重建一份，两处都管同一条连接。
+    const owned = entryId.startsWith(ENTRY_PREFIX) || entryId.startsWith(CUSTOM_PREFIX)
+    if (owned) rememberEnabled(entryId, enabled, collectMcpEntries(loader).get(entryId)?.config)
+    return { status: 200, body: { ok: true, entryId, enabled, persisted: owned } }
+  }
+
+  if (method === 'POST' && sub === '/services/remove') {
+    const payload = await readJson()
+    const entryId = String(payload?.entryId || '')
+    if (!entryId) throw new Error('缺少 entryId')
+    const loader = requireLoader(ctx)
+    // 外部行归别的插件 / 配置管：删了重启就回来，还会让那边的管理页对不上。
+    // 与其制造这种「删了没用」的体验，不如明确拒绝。
+    if (!entryId.startsWith(ENTRY_PREFIX) && !entryId.startsWith(CUSTOM_PREFIX)) {
+      return {
+        status: 200,
+        body: { ok: false, removed: false, entryId, reason: 'external', error: '这条连接不是本插件建的，请在创建它的插件里删除' },
+      }
+    }
+    const removed = removeEntry(loader, entryId)
+    // 内置三条会被 seedBuiltins 在下次启动时自动补回来，所以删除要留标记而不是只删记录。
+    if (entryId.startsWith(ENTRY_PREFIX)) rememberRemoved(entryId)
+    else if (removed) forgetEntry(entryId)
+    return { status: 200, body: { ok: true, removed, entryId, sticky: entryId.startsWith(ENTRY_PREFIX) } }
+  }
+
+  if (method === 'POST' && sub === '/services/install-hub') {
+    // Hub 模板 → 一条连接：参数原样交给 connectCustom，缺凭据时由面板先补齐。
+    const payload = await readJson()
+    const item = findHubItem(String(payload?.id || ''))
+    if (!item) throw new Error(`Hub 里没有这一项：${payload?.id}`)
+    const merged = { ...hubInstallPayload(item), ...(payload?.overrides || {}) }
+    const result = await connectCustom(ctx, merged)
+    return { status: 200, body: { ...result, presetId: item.id } }
   }
 
   /* ── 观测类 ─────────────────────────────────────────────────────── */
