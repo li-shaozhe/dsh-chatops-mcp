@@ -173,6 +173,33 @@ const ok = (cond, message) => {
   const fs = json.items.find((item) => item.id === 'filesystem')
   ok(fs && fs.install && fs.install.command === 'npx', 'filesystem 模板没有带 install.command')
   ok(fs && fs.install.transport === 'stdio', 'filesystem 模板 transport 不对')
+  ok(fs && fs.icon === 'filesystem', 'filesystem 应带品牌图标 key')
+
+  // 内置三条必须出现在 Hub 里（不然用户以为 Hub 不支持钉钉飞书），
+  // 且不能带 install 载荷（参数由 connectors 运行时现算）。
+  for (const id of ['builtin-dingtalk', 'builtin-feishu', 'builtin-meego']) {
+    const item = json.items.find((entry) => entry.id === id)
+    ok(Boolean(item), `Hub 缺少内置项 ${id}`)
+    if (item) {
+      ok(item.builtin === true, `${id} 应标 builtin`)
+      ok(item.install === null, `${id} 不该有 install 载荷`)
+      ok(Boolean(item.connectorId), `${id} 缺 connectorId`)
+      ok(Boolean(item.icon), `${id} 缺 icon`)
+    }
+  }
+
+  // 运行时状态：/hub 要带上三条内置的 connected/toolCount，Hub 卡片才显示得出
+  // 「已连接 / 可一键连接」。只断言形状与必有的那条 —— 其余两条取决于本机
+  // CLI 与令牌，seedBuiltins 会按前置条件自动补行，不能假定未连接。
+  ok(Array.isArray(json.builtins), '/hub 应返回 builtins 状态')
+  ok((json.builtins || []).length === 3, `builtins 应有 3 条，实际 ${json.builtins?.length}`)
+  const dt = (json.builtins || []).find((entry) => entry.id === 'dingtalk')
+  ok(dt && dt.connected === true, 'dingtalk 状态应为已连接')
+  ok(dt && dt.toolCount === 7, `dingtalk toolCount 应为 7，实际 ${dt?.toolCount}`)
+  for (const entry of json.builtins || []) {
+    ok(typeof entry.connected === 'boolean', `${entry.id} 缺 connected 布尔位`)
+    ok(typeof entry.toolCount === 'number', `${entry.id} 缺 toolCount 数字`)
+  }
 }
 
 {

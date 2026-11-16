@@ -75,7 +75,7 @@ import {
   storeFile,
   CUSTOM_PREFIX,
 } from './connectors.js'
-import { HUB, HUB_CATEGORIES, findHubItem, hubInstallPayload } from './hub.js'
+import { HUB, HUB_CATEGORIES, findHubItem, hubInstallPayload, iconForServer } from './hub.js'
 import {
   discoverDingTalk,
   discoverFeishu,
@@ -300,6 +300,9 @@ function toService({ entryId, entryId0, config, disabled, origin, builtin, tools
     name: builtin?.name || serverName,
     vendor: builtin?.vendor || (origin === 'custom' ? '自定义' : '外部连接'),
     category: builtin?.category || (origin === 'builtin' ? '办公协作' : '自定义'),
+    // 品牌图标 key：内置三条按 serverName 认得出，用户自己加的 filesystem / git
+    // 之类也能认出来，共用 Hub 卡片那套标记。认不出则回落首字母块。
+    icon: iconForServer(serverName),
     badge: builtin?.badge || String(serverName).slice(0, 2).toUpperCase(),
     badgeColor: builtin?.badgeColor || '#475569',
     summary: builtin?.summary || target || '本机 MCP 连接',
@@ -830,6 +833,21 @@ async function handle(req, ctx) {
         categories: HUB_CATEGORIES,
         items: HUB.map((item) => ({ ...item, install: hubInstallPayload(item) })),
         total: HUB.length,
+        // 内置项在 Hub 里也要显示「已连接 / 一键连接」，所以顺手把它们的运行时状态带给面板，
+        // 否则 Hub 只能显示模板、看不到钉钉飞书到底连没连上。
+        builtins: CATALOG.map((connector) => {
+          const state = connectorState(connector, mcpEntries(ctx), toolCounts(ctx))
+          return {
+            id: connector.id,
+            connected: state.connected,
+            enabled: state.enabled,
+            ready: state.ready,
+            toolCount: state.toolCount,
+            needs: state.needs,
+            cliInstalled: state.cli ? state.cli.installed : true,
+            tokenPresent: state.token ? state.token.present : true,
+          }
+        }),
       },
     }
   }

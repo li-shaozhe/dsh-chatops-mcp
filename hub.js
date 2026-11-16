@@ -12,16 +12,70 @@
  *   - 本文件不发起任何网络请求，纯数据。
  */
 
-/** @typedef {{ id:string,name:string,vendor:string,category:string,badge:string,badgeColor:string,summary:string,tags:string[],transport:'stdio'|'streamable-http',command?:string,args?:string[],url?:string,envKeys?:{key:string,label:string,placeholder?:string,secret?:boolean}[],headerKeys?:{key:string,label:string,placeholder?:string}[],serverName?:string,timeoutMs?:number,homepage?:string,prompts?:string[] }} HubItem */
+/** @typedef {{ id:string,name:string,vendor:string,category:string,badge:string,badgeColor:string,summary:string,tags:string[],transport:'stdio'|'streamable-http',builtin?:boolean,connectorId?:string,icon?:string,command?:string,args?:string[],url?:string,envKeys?:{key:string,label:string,placeholder?:string,secret?:boolean}[],headerKeys?:{key:string,label:string,placeholder?:string}[],serverName?:string,timeoutMs?:number,homepage?:string,prompts?:string[] }} HubItem */
 
 /** @type {HubItem[]} */
 export const HUB = [
+  /* ── 办公协作：内置三条 ──────────────────────────────────────────
+   * 这三条不是「模板」，是本包 CATALOG 里的内置连接器：参数由 connectors.js
+   * 在运行时按本机情况现算（CLI 路径、node、令牌来源），所以这里只放展示信息，
+   * 不带 command/args，也没有 install 载荷 —— 点卡片走「一键连接」那条路。 */
+  {
+    id: 'builtin-dingtalk',
+    name: '钉钉',
+    vendor: 'DingTalk',
+    category: '办公协作',
+    icon: 'dingtalk',
+    badge: '钉',
+    badgeColor: '#1677ff',
+    summary: '钉钉全产品能力：AI 表格、考勤、日历、群聊与机器人、通讯录、文档、待办、审批、钉盘、听记。复用本机 dws CLI 的登录态。',
+    tags: ['钉钉', 'IM', '日历', '审批'],
+    transport: 'stdio',
+    builtin: true,
+    connectorId: 'dingtalk',
+    homepage: 'https://github.com/DingTalk-Real-AI/dingtalk-workspace-cli',
+    prompts: [],
+  },
+  {
+    id: 'builtin-feishu',
+    name: '飞书',
+    vendor: 'Lark / 飞书',
+    category: '办公协作',
+    icon: 'feishu',
+    badge: '飞',
+    badgeColor: '#3370ff',
+    summary: '飞书 / Lark 全产品能力：消息与群聊、日历、任务、通讯录、云文档、云空间、审批、知识库、表格、妙记。复用本机 lark-cli 的登录态。',
+    tags: ['飞书', 'IM', '云文档', '审批'],
+    transport: 'stdio',
+    builtin: true,
+    connectorId: 'feishu',
+    homepage: 'https://github.com/larksuite/cli',
+    prompts: [],
+  },
+  {
+    id: 'builtin-meego',
+    name: '飞书项目',
+    vendor: 'Lark Project / Meego',
+    category: '办公协作',
+    icon: 'feishu-project',
+    badge: '项',
+    badgeColor: '#00b96b',
+    summary: '飞书项目（Meego）官方 MCP：需求 / 缺陷 / 迭代 / 排期、字段与角色、工作项检索（MQL）、WBS、评论、工时。只需要一个 MCP 用户令牌。',
+    tags: ['飞书项目', '需求', '缺陷', 'MQL'],
+    transport: 'stdio',
+    builtin: true,
+    connectorId: 'meego',
+    homepage: 'https://project.feishu.cn',
+    prompts: [],
+  },
+
   /* ── 文件与代码 ─────────────────────────────────────────────── */
   {
     id: 'filesystem',
     name: 'Filesystem',
     vendor: 'Model Context Protocol',
     category: '文件与代码',
+    icon: 'filesystem',
     badge: 'FS',
     badgeColor: '#2563eb',
     summary: '在指定目录内读写文件、搜索、打补丁。启动参数里必须给出允许访问的根目录，越界会被服务端直接拒绝。',
@@ -38,6 +92,7 @@ export const HUB = [
     name: 'Git',
     vendor: 'Model Context Protocol',
     category: '文件与代码',
+    icon: 'git',
     badge: 'GIT',
     badgeColor: '#f97316',
     summary: '读取仓库状态、diff、提交历史、分支，并执行只读的 git 命令。适合让 AI 直接看改动而不是贴日志。',
@@ -54,6 +109,7 @@ export const HUB = [
     name: 'GitHub',
     vendor: 'GitHub（官方远程）',
     category: '文件与代码',
+    icon: 'github',
     badge: 'GH',
     badgeColor: '#111827',
     summary: '仓库、Issue、PR、Code Search 与 Actions 日志。用 Personal Access Token 走远程 MCP，不需要本机装东西。',
@@ -70,6 +126,7 @@ export const HUB = [
     name: 'Context7',
     vendor: 'Upstash',
     category: '文件与代码',
+    icon: 'context7',
     badge: 'C7',
     badgeColor: '#0ea5e9',
     summary: '按库名拉取最新官方文档片段，减少模型凭记忆编 API。远程服务，无需凭据。',
@@ -87,6 +144,7 @@ export const HUB = [
     name: 'Fetch',
     vendor: 'Model Context Protocol',
     category: '搜索与抓取',
+    icon: 'fetch',
     badge: 'FE',
     badgeColor: '#10b981',
     summary: '把网页转成 Markdown 交给模型，带 robots.txt 校验与长度上限，比直接塞 HTML 干净。',
@@ -103,6 +161,7 @@ export const HUB = [
     name: 'Brave Search',
     vendor: 'Brave',
     category: '搜索与抓取',
+    icon: 'brave-search',
     badge: 'BS',
     badgeColor: '#fb542b',
     summary: '网页 / 新闻 / 图片搜索，需要 Brave Search API Key。结果带来源域名，适合要出处的调研。',
@@ -120,6 +179,7 @@ export const HUB = [
     name: 'Tavily',
     vendor: 'Tavily',
     category: '搜索与抓取',
+    icon: 'tavily',
     badge: 'TV',
     badgeColor: '#6366f1',
     summary: '为 Agent 优化的搜索 API，支持 search / extract / crawl，需要 Tavily Key。',
@@ -139,6 +199,7 @@ export const HUB = [
     name: 'PostgreSQL',
     vendor: 'Model Context Protocol',
     category: '数据与存储',
+    icon: 'postgres',
     badge: 'PG',
     badgeColor: '#336791',
     summary: '只读 SQL 查询、表结构探查。连接串写进环境变量，建议给只读账号。',
@@ -155,6 +216,7 @@ export const HUB = [
     name: 'SQLite',
     vendor: 'Model Context Protocol',
     category: '数据与存储',
+    icon: 'sqlite',
     badge: 'SQ',
     badgeColor: '#0f766e',
     summary: '对单个 .db 文件执行 SQL 与结构探查，适合本地数据文件。',
@@ -171,6 +233,7 @@ export const HUB = [
     name: 'Memory',
     vendor: 'Model Context Protocol',
     category: '数据与存储',
+    icon: 'memory',
     badge: 'MM',
     badgeColor: '#8b5cf6',
     summary: '基于知识图谱的长期记忆：实体、关系、观察记录，可跨会话检索。',
@@ -189,6 +252,7 @@ export const HUB = [
     name: 'Chrome DevTools',
     vendor: 'Chrome DevTools',
     category: '浏览器与自动化',
+    icon: 'chrome-devtools',
     badge: 'CD',
     badgeColor: '#22c55e',
     summary: '驱动真实 Chrome：导航、点按、抓网络请求、读控制台、截图。调试前端问题的首选。',
@@ -205,6 +269,7 @@ export const HUB = [
     name: 'Playwright',
     vendor: 'Microsoft',
     category: '浏览器与自动化',
+    icon: 'playwright',
     badge: 'PW',
     badgeColor: '#2e7d32',
     summary: '无头浏览器自动化：点击、填表、断言、截图，适合把手工回归脚本化。',
@@ -221,6 +286,7 @@ export const HUB = [
     name: 'Puppeteer',
     vendor: 'Model Context Protocol',
     category: '浏览器与自动化',
+    icon: 'puppeteer',
     badge: 'PP',
     badgeColor: '#00d8a2',
     summary: '早期的浏览器自动化参考实现，能力覆盖导航、执行 JS、截图。',
@@ -238,7 +304,8 @@ export const HUB = [
     id: 'slack',
     name: 'Slack',
     vendor: 'Model Context Protocol',
-    category: '办公与协作',
+    category: '办公协作',
+    icon: 'slack',
     badge: 'SL',
     badgeColor: '#611f69',
     summary: '读频道历史、发消息、查用户。用 Bot Token 换，注意给最小 scope。',
@@ -258,7 +325,8 @@ export const HUB = [
     id: 'notion',
     name: 'Notion',
     vendor: 'Notion（官方远程）',
-    category: '办公与协作',
+    category: '办公协作',
+    icon: 'notion',
     badge: 'NT',
     badgeColor: '#111827',
     summary: '搜索页面、读数据库条目、按模板建页。官方远程 MCP，用集成 Token 授权。',
@@ -274,7 +342,8 @@ export const HUB = [
     id: 'linear',
     name: 'Linear',
     vendor: 'Linear（官方远程）',
-    category: '办公与协作',
+    category: '办公协作',
+    icon: 'linear',
     badge: 'LN',
     badgeColor: '#5e6ad2',
     summary: 'Issue、项目、迭代、评论。远程 MCP + 个人 API Key。',
@@ -290,7 +359,8 @@ export const HUB = [
     id: 'sentry',
     name: 'Sentry',
     vendor: 'Sentry（官方远程）',
-    category: '办公与协作',
+    category: '办公协作',
+    icon: 'sentry',
     badge: 'SN',
     badgeColor: '#8b5cf6',
     summary: '按项目查 Issue、事件详情、堆栈与 Release，线上排障入口。',
@@ -306,7 +376,8 @@ export const HUB = [
     id: 'feishu-project',
     name: '飞书项目（Meego）',
     vendor: 'Lark Project',
-    category: '办公与协作',
+    category: '办公协作',
+    icon: 'feishu-project',
     badge: '项',
     badgeColor: '#00b96b',
     summary: '飞书项目官方 MCP：需求 / 缺陷 / 迭代 / 排期 / 工作项检索（MQL）。这条与内置连接器等价，这里只是给出可手工粘贴的模板。',
@@ -326,6 +397,7 @@ export const HUB = [
     name: 'Sequential Thinking',
     vendor: 'Model Context Protocol',
     category: '分析工具',
+    icon: 'sequential-thinking',
     badge: 'ST',
     badgeColor: '#f59e0b',
     summary: '把复杂问题拆成可回溯的推理步骤，适合让模型显式列出假设再收敛。',
@@ -342,6 +414,7 @@ export const HUB = [
     name: 'Time',
     vendor: 'Model Context Protocol',
     category: '分析工具',
+    icon: 'time',
     badge: 'TM',
     badgeColor: '#0891b2',
     summary: '时区换算与当前时间。跨时区排期时比自己算靠谱。',
@@ -358,6 +431,7 @@ export const HUB = [
     name: 'Everything（探针）',
     vendor: 'Model Context Protocol',
     category: '分析工具',
+    icon: 'everything',
     badge: 'EV',
     badgeColor: '#64748b',
     summary: '官方示例服务，覆盖 tools / resources / prompts / sampling 全协议面，用来验证一条连接是否真的通了。',
@@ -371,8 +445,48 @@ export const HUB = [
   },
 ]
 
-/** 分类顺序（面板里按这个顺序排，未知分类排最后）。 */
-export const HUB_CATEGORIES = ['文件与代码', '搜索与抓取', '数据与存储', '浏览器与自动化', '办公与协作', '分析工具']
+/** 分类顺序（面板里按这个顺序排，未知分类排最后）。
+ * 办公协作排第一：内置三条是开箱能用的，模板是可选加的，先给能立刻用的。 */
+export const HUB_CATEGORIES = ['办公协作', '文件与代码', '搜索与抓取', '数据与存储', '浏览器与自动化', '分析工具']
+
+/**
+ * serverName → 品牌图标 key。
+ *
+ * 服务列表里的行来自 Loader，只有 serverName，没有 icon。这里按 serverName 反查，
+ * 所以用户自己加的 `filesystem` 连接也能拿到和 Hub 卡片一致的图标；认不出来的
+ * 返回 null，面板回落成首字母块。
+ */
+const SERVER_ICONS = {
+  dingtalk: 'dingtalk',
+  feishu: 'feishu',
+  meego: 'feishu-project',
+  'feishu-project': 'feishu-project',
+  FeishuProjectMcp: 'feishu-project',
+  filesystem: 'filesystem',
+  git: 'git',
+  github: 'github',
+  context7: 'context7',
+  fetch: 'fetch',
+  'brave-search': 'brave-search',
+  tavily: 'tavily',
+  postgres: 'postgres',
+  sqlite: 'sqlite',
+  memory: 'memory',
+  'chrome-devtools': 'chrome-devtools',
+  playwright: 'playwright',
+  puppeteer: 'puppeteer',
+  slack: 'slack',
+  notion: 'notion',
+  linear: 'linear',
+  sentry: 'sentry',
+  'sequential-thinking': 'sequential-thinking',
+  time: 'time',
+  everything: 'everything',
+}
+
+export function iconForServer(serverName) {
+  return SERVER_ICONS[serverName] || null
+}
 
 export function findHubItem(id) {
   return HUB.find((item) => item.id === id) || null
@@ -381,8 +495,13 @@ export function findHubItem(id) {
 /**
  * 把 Hub 模板转成「添加 MCP」弹层能直接吃的 payload（与 /custom 的入参同形）。
  * env 留空占位：用户填完再提交，绝不把示例值写进配置。
+ *
+ * 内置项（builtin）没有模板参数 —— 它们的 command / args / 令牌来源由
+ * connectors.js 在运行时按本机情况现算。对它们返回 null，调用方据此走
+ * 「一键连接」而不是「填表单」。
  */
 export function hubInstallPayload(item) {
+  if (item.builtin) return null
   const env = {}
   for (const field of item.envKeys || []) env[field.key] = ''
   const headers = {}

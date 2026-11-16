@@ -121,6 +121,7 @@ function renderTree(node, sink) {
   if (typeof props.onClick === 'function') {
     sink.clickables.push({ props, label: collectText(props.children) })
   }
+  if (type === 'svg') sink.svgs.push(props)
   renderTree(props.children, sink)
 }
 
@@ -134,7 +135,7 @@ function collectText(node) {
 
 async function renderOnce(rootRenderer) {
   pendingEffects = []
-  const sink = { text: [], clickables: [] }
+  const sink = { text: [], clickables: [], svgs: [] }
   renderCounter = 0
   renderTree(rootRenderer(), sink)
   // 跑副作用（异步的等一拍），最多三轮：够让 fetch → setState 的数据落地。
@@ -151,6 +152,7 @@ async function renderOnce(rootRenderer) {
     await new Promise((resolve) => setTimeout(resolve, 0))
     sink.text = []
     sink.clickables = []
+    sink.svgs = []
     renderCounter = 0
     renderTree(rootRenderer(), sink)
   }
@@ -161,7 +163,7 @@ async function renderOnce(rootRenderer) {
       /* 清理失败不影响断言 */
     }
   }
-  return { text: sink.text.join(' '), clickables: sink.clickables }
+  return { text: sink.text.join(' '), clickables: sink.clickables, svgs: sink.svgs }
 }
 
 /* ── 抓 apply() 注册的 slot 组件 ────────────────────────────────── */
@@ -286,32 +288,22 @@ const CONNECTORS = {
   node: { command: 'D:\\nvm\\v20.15.0\\node.exe', version: 'v20.15.0', major: 20, ok: true, minMajor: 18, fromPath: 'D:\\nodejs\\node.exe', fromPathVersion: 'v14.8.0' },
 }
 
-const HUB_ITEM = {
-  id: 'filesystem',
-  name: 'Filesystem',
-  vendor: 'Model Context Protocol',
-  category: '文件与代码',
-  badge: 'FS',
-  badgeColor: '#2563eb',
-  summary: '在指定目录内读写文件',
-  tags: ['文件', '读写'],
-  transport: 'stdio',
-  serverName: 'filesystem',
-  command: 'npx',
-  args: ['-y', '@modelcontextprotocol/server-filesystem', 'D:/path/to/workspace'],
-  envKeys: [],
-  headerKeys: [],
-  install: {
-    serverName: 'filesystem',
-    transport: 'stdio',
-    command: 'npx',
-    args: ['-y', '@modelcontextprotocol/server-filesystem', 'D:/path/to/workspace'],
-    env: {},
-    headers: {},
-    toolCallTimeoutMs: 60000,
-  },
+const HUB = {
+  categories: ['办公协作', '文件与代码', '搜索与抓取'],
+  items: [
+    { id: 'builtin-dingtalk', name: '钉钉', vendor: 'DingTalk', category: '办公协作', badge: '钉', badgeColor: '#1677ff', icon: 'dingtalk', summary: '钉钉全产品能力', tags: ['钉钉', 'IM'], transport: 'stdio', builtin: true, connectorId: 'dingtalk', install: null },
+    { id: 'builtin-feishu', name: '飞书', vendor: 'Lark / 飞书', category: '办公协作', badge: '飞', badgeColor: '#3370ff', icon: 'feishu', summary: '飞书全产品能力', tags: ['飞书'], transport: 'stdio', builtin: true, connectorId: 'feishu', install: null },
+    { id: 'builtin-meego', name: '飞书项目', vendor: 'Lark Project / Meego', category: '办公协作', badge: '项', badgeColor: '#00b96b', icon: 'feishu-project', summary: '飞书项目官方 MCP', tags: ['项目'], transport: 'stdio', builtin: true, connectorId: 'meego', install: null },
+    { id: 'filesystem', name: 'Filesystem', vendor: 'Model Context Protocol', category: '文件与代码', badge: 'FS', badgeColor: '#2563eb', icon: 'filesystem', summary: '在指定目录内读写文件', tags: ['文件', '读写'], transport: 'stdio', serverName: 'filesystem', command: 'npx', args: ['-y', '@modelcontextprotocol/server-filesystem', 'D:/path/to/workspace'], envKeys: [], headerKeys: [], install: { serverName: 'filesystem', transport: 'stdio', command: 'npx', args: ['-y', '@modelcontextprotocol/server-filesystem', 'D:/path/to/workspace'], env: {}, headers: {}, toolCallTimeoutMs: 60000 } },
+    { id: 'github', name: 'GitHub', vendor: 'GitHub（官方远程）', category: '文件与代码', badge: 'GH', badgeColor: '#111827', icon: 'github', summary: '仓库、Issue、PR', tags: ['GitHub'], transport: 'streamable-http', serverName: 'github', headerKeys: [{ key: 'Authorization' }], envKeys: [], install: { serverName: 'github', transport: 'streamable-http', url: 'https://api.githubcopilot.com/mcp/', headers: { Authorization: '' }, env: {} } },
+  ],
+  builtins: [
+    { id: 'dingtalk', connected: true, enabled: true, ready: true, toolCount: 3, cliInstalled: true, tokenPresent: true },
+    { id: 'feishu', connected: false, enabled: false, ready: true, toolCount: 0, cliInstalled: true, tokenPresent: true },
+    { id: 'meego', connected: false, enabled: false, ready: false, toolCount: 0, cliInstalled: true, tokenPresent: false },
+  ],
+  total: 5,
 }
-const HUB = { categories: ['文件与代码', '办公与协作'], items: [HUB_ITEM, { ...HUB_ITEM, id: 'github', name: 'GitHub', transport: 'streamable-http', serverName: 'github', url: 'https://api.githubcopilot.com/mcp/', command: undefined, headerKeys: [{ key: 'Authorization' }], install: { serverName: 'github', transport: 'streamable-http', url: 'https://api.githubcopilot.com/mcp/', headers: { Authorization: '' }, env: {} } }], total: 2 }
 const STATE = { cacheDir: 'C:\\cache', cacheTtlMs: 28800000, surfaces: [], health: {}, config: { max: 30, effect: 'all', products: 'auto' } }
 
 globalThis.fetch = async (url) => {
@@ -370,6 +362,19 @@ for (const slotName of ['settings.section']) {
     const afterTab = await renderOnce(() => React.createElement(panel, {}))
     if (!afterTab.text.includes('Filesystem')) problems.push('MCP Hub 页没渲染出模板卡片')
     if (!afterTab.text.includes('Hub 只是可安装模板')) problems.push('MCP Hub 缺少「这只是模板」的说明')
+    // 内置三条必须出现在 Hub 里，否则用户以为 Hub 不支持钉钉飞书。
+    for (const name of ['钉钉', '飞书', '飞书项目']) {
+      if (!afterTab.text.includes(name)) problems.push(`Hub 里没渲染出内置项「${name}」`)
+    }
+    // 分类改成横排标签：标签文本要出现，且不能再是 <select>。
+    for (const name of ['全部', '办公协作', '文件与代码', '搜索与抓取']) {
+      if (!afterTab.text.includes(name)) problems.push(`分类标签栏缺「${name}」`)
+    }
+    const hasSelect = afterTab.clickables.some((node) => node.props?.['aria-label'] === '按分类筛选')
+    if (hasSelect) problems.push('分类仍是下拉框（应改为横排标签）')
+    // 品牌图标：Hub 卡片应画出 svg（而不是全部回落成两字母块）。
+    if (afterTab.svgs.length === 0) problems.push('Hub 卡片没有渲染任何 svg 品牌图标')
+
     const card = afterTab.clickables.find((item) => item.label.includes('Filesystem'))
     if (!card) {
       problems.push('Hub 卡片不可点（找不到 Filesystem 的点击目标）')

@@ -160,7 +160,7 @@ window.__ModuleLoader__.load({
       '.co-svc{position:relative;transition:background 140ms var(--co-ease);}',
       '.co-svc + .co-svc{border-top:1px solid var(--dsw-alias-border-l1);}',
       '.co-svc:hover{background:var(--dsw-alias-bg-layer-1);}',
-      '.co-svc[data-off="1"] .co-svc-badge{filter:grayscale(1);opacity:.55;}',
+      '.co-svc[data-off="1"] .co-conn-badge{filter:grayscale(1);opacity:.55;}',
       '.co-svc[data-off="1"] .co-svc-name span:first-child{color:var(--dsw-alias-label-tertiary);}',
       '.co-svc[data-open="1"]{background:var(--dsw-alias-bg-layer-1);}',
       '.co-svc[data-open="1"]::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--dsw-alias-brand-primary);}',
@@ -189,18 +189,21 @@ window.__ModuleLoader__.load({
       '.co-icon-btn:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:1px;}',
       /* ── MCP Hub：分类 + 卡片 ── */
       '.co-hub-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-bottom:14px;flex-shrink:0;}',
-      '.co-hub-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(272px,1fr));gap:10px;align-items:start;}',
+      '.co-hub-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;align-items:start;}',
       /* 卡片高度由内容决定，不设 min-height：之前 98px 下限 + footer 的 margin-top:auto
        * 会把只有一两行描述的卡片撑出大片空洞（单卡分类尤其明显）。 */
-      '.co-hub-card{display:flex;gap:10px;padding:12px 13px;background:var(--dsw-alias-bg-base);border:1px solid var(--dsw-alias-border-l1);border-radius:var(--co-r-lg);cursor:pointer;'
+      '.co-hub-card{position:relative;display:flex;gap:10px;padding:12px 13px;background:var(--dsw-alias-bg-base);border:1px solid var(--dsw-alias-border-l1);border-radius:var(--co-r-lg);cursor:pointer;'
         + 'transition:border-color 140ms var(--co-ease),box-shadow 140ms var(--co-ease),transform 140ms var(--co-ease);}',
       '.co-hub-card:hover{border-color:var(--dsw-alias-border-l2);box-shadow:0 2px 6px rgba(16,24,40,.05),0 12px 28px -18px rgba(16,24,40,.28);transform:translateY(-1px);}',
       '.co-hub-card:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px;}',
       '.co-hub-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;}',
+      /* 名称永不截断（它就是这一行的识别字段），被挤的是 vendor。 */
       '.co-hub-name{display:flex;align-items:baseline;gap:6px;font-size:13.5px;font-weight:600;min-width:0;line-height:1.3;}',
-      '.co-hub-vendor{font-size:11px;color:var(--dsw-alias-label-caption);font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}',
+      '.co-hub-name > span:first-child{flex-shrink:0;white-space:nowrap;}',
+      '.co-hub-vendor{font-size:11px;color:var(--dsw-alias-label-caption);font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex-shrink:1;}',
       '.co-hub-desc{font-size:11.5px;line-height:1.55;color:var(--dsw-alias-label-caption);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}',
-      '.co-hub-ft{display:flex;align-items:center;gap:5px;padding-top:4px;flex-wrap:wrap;}',
+      /* footer 单行不换行：换行会让同一行卡片高度参差（截图里飞书项目就多出一行）。 */
+      '.co-hub-ft{display:flex;align-items:center;gap:5px;padding-top:4px;flex-wrap:nowrap;min-width:0;overflow:hidden;}',
       '.co-tag{font-size:10.5px;padding:1px 6px;border-radius:4px;background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-caption);white-space:nowrap;line-height:16px;}',
       /* 分类标题：Hub 的分组靠它切段，之前 11px 灰色几乎看不见。
        * 现在「标题 + 计数字 + 一条延伸到右侧的细线」，形成真实的分节感。 */
@@ -208,6 +211,36 @@ window.__ModuleLoader__.load({
       '.co-grp:first-child{margin-top:2px;}',
       '.co-grp::after{content:"";flex:1;height:1px;background:var(--dsw-alias-border-l1);}',
       '.co-grp-n{font-size:11px;font-weight:500;color:var(--dsw-alias-label-caption);font-variant-numeric:tabular-nums;}',
+      '.co-brand{box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 1px 2px rgba(16,24,40,.14);}',
+      /* ── 分类标签栏（对齐插件市场）──
+       * 之前用 <select>：6 个分类藏在二次点击里，而分类是这页最主要的导航维度。
+       * 横排标签一眼可见、一次点到，且带计数。 */
+      '.co-tabs{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding-bottom:12px;flex-shrink:0;}',
+      '.co-tab{appearance:none;display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 11px;'
+        + 'font-size:12.5px;font-family:inherit;border-radius:7px;border:1px solid transparent;'
+        + 'background:transparent;color:var(--dsw-alias-label-secondary);cursor:pointer;'
+        + 'transition:background 130ms var(--co-ease),color 130ms var(--co-ease),border-color 130ms var(--co-ease);}',
+      '.co-tab:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary);}',
+      '.co-tab[data-on="1"]{background:var(--dsw-alias-bg-base);border-color:var(--dsw-alias-border-l2);'
+        + 'color:var(--dsw-alias-label-primary);font-weight:600;box-shadow:0 1px 2px rgba(16,24,40,.06);}',
+      '.co-tab:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:1px;}',
+      '.co-tab-n{font-size:11px;font-weight:500;color:var(--dsw-alias-label-caption);font-variant-numeric:tabular-nums;}',
+      '.co-tab[data-on="1"] .co-tab-n{color:var(--dsw-alias-brand-primary);}',
+      /* Hub 卡片上的动作按钮：绝对定位在右上角。
+       * 之前作为 flex 子项横排，会把 main 区挤窄、描述被截成两行半，而且卡片
+       * 高度跟着按钮走。右上角浮起来后，正文可用宽度与模板卡保持一致。 */
+      '.co-hub-cta{position:absolute;top:10px;right:10px;appearance:none;height:24px;padding:0 9px;font-size:11.5px;font-family:inherit;'
+        + 'border-radius:6px;border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-base);'
+        + 'color:var(--dsw-alias-label-primary);cursor:pointer;opacity:0;'
+        + 'transition:opacity 130ms var(--co-ease),background 120ms var(--co-ease);}',
+      /* 只有内置项有按钮；模板卡不显示。默认透明，悬停 / 键盘聚焦时才浮现 ——
+       * 已连接的行本来就只需一眼确认状态，常驻按钮会变成噪音。 */
+      '.co-hub-card:hover .co-hub-cta,.co-hub-card:focus-visible .co-hub-cta,.co-hub-cta:focus-visible{opacity:1;}',
+      '.co-hub-cta:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover);}',
+      '.co-hub-cta:disabled{opacity:.55;cursor:default;}',
+      /* 预留右上角空间，避免长描述顶到按钮下面。 */
+      '.co-hub-card[data-builtin="1"] .co-hub-main{padding-right:44px;}',
+      '.co-hub-card[data-on="1"] .co-hub-name span:first-child{font-weight:650;}',
     ].join('')
 
     // ── 主题 token ────────────────────────────────────────────────────
@@ -923,16 +956,188 @@ window.__ModuleLoader__.load({
 
     /* ── 连接器：卡片墙 + 详情弹层 + 自定义连接 ─────────────────────── */
 
-    function Badge({ color, text, size = 38, radius = 10, fontSize = 17 }) {
+    /**
+     * 品牌图标。
+     *
+     * 以前一律是两个字母的缩写块（钉 / 飞 / FS / GIT），一眼看不出是什么服务，
+     * 一排卡片扫过去全是同形状的方块。这里给认得的服务画简化品牌标记：
+     * 保留各家的视觉特征（钉钉的翅膀、飞书的双翼、GitHub 的猫头轮廓、
+     * Postgres 的大象鼻、Chrome 的三色环……），但不逐像素复刻官方矢量图 ——
+     * 图标要能随尺寸缩放、在浅深色背景上都清楚，且不引入外部图片依赖。
+     *
+     * 认不出来的（用户在「添加 MCP」里手填的 server）回落到首字母块，
+     * 这一层由 Badge 里的 fallback 负责。
+     */
+    const BRAND_ICONS = {
+      /* 钉钉：官方 logo 是蓝色圆角方 + 白色翅膀形。这里保留「上宽下窄的翅膀」轮廓。 */
+      dingtalk: (size) => [
+        h('path', {
+          key: 'w',
+          d: 'M7.2 3.2h9.6L13.2 7.4c-.5.5-1 1-1.6 1.4l4.9.6-6.4 3.9 2 .3-5.5 4 .9-3.4-2.6.7 4.6-4.6-4.6-6.4z',
+          fill: '#fff',
+        }),
+      ],
+      /* 飞书：双翼对称的 V，官方是蓝色底上的两道斜翼。 */
+      feishu: (size) => [
+        h('path', { key: 'l', d: 'M4.6 5.6c2.4-.3 4 .3 4.9 1.9.7 1.3.6 2.8-.3 4.3-1.6-2.6-3.1-4.7-4.6-6.2z', fill: '#fff' }),
+        h('path', { key: 'r', d: 'M15.4 5.6c-2.4-.3-4 .3-4.9 1.9-.7 1.3-.6 2.8.3 4.3 1.6-2.6 3.1-4.7 4.6-6.2z', fill: '#fff', opacity: '.82' }),
+        h('rect', { key: 'b', x: '6.4', y: '12.2', width: '7.2', height: '1.7', rx: '.85', fill: '#fff', opacity: '.92' }),
+      ],
+      /* 飞书项目：三层堆叠的工作项（对应需求 / 缺陷 / 迭代）。 */
+      'feishu-project': () => [
+        h('rect', { key: 'a', x: '3.4', y: '3.6', width: '9.2', height: '2.6', rx: '1.3', fill: '#fff' }),
+        h('rect', { key: 'b', x: '5.2', y: '7.6', width: '9.4', height: '2.6', rx: '1.3', fill: '#fff', opacity: '.86' }),
+        h('rect', { key: 'c', x: '3.4', y: '11.6', width: '9.2', height: '2.6', rx: '1.3', fill: '#fff', opacity: '.68' }),
+      ],
+      /* GitHub：圆底 + 猫耳 + 尾巴的极简轮廓（官方 Octocat 剪影的可缩放简化）。 */
+      github: () => [
+        h('path', {
+          key: 'cat',
+          d: 'M10 2.6a7.4 7.4 0 0 0-2.34 14.42c.37.07.5-.16.5-.35v-1.3c-2.06.45-2.5-.9-2.5-.9-.34-.86-.83-1.09-.83-1.09-.68-.46.05-.45.05-.45.75.05 1.14.77 1.14.77.67 1.14 1.75.81 2.18.62.07-.48.26-.81.47-1-1.64-.19-3.37-.82-3.37-3.66 0-.81.29-1.47.76-1.99-.08-.19-.33-.94.07-1.96 0 0 .62-.2 2.03.76a7.05 7.05 0 0 1 3.7 0c1.4-.96 2.02-.76 2.02-.76.4 1.02.15 1.77.08 1.96.47.52.76 1.18.76 1.99 0 2.85-1.74 3.47-3.39 3.65.27.23.5.68.5 1.37v2.03c0 .19.13.42.51.35A7.4 7.4 0 0 0 10 2.6z',
+          fill: '#fff',
+        }),
+      ],
+      git: () => [
+        h('circle', { key: 'a', cx: '5.4', cy: '5', r: '2.2', fill: '#fff' }),
+        h('circle', { key: 'b', cx: '5.4', cy: '14.6', r: '2.2', fill: '#fff', opacity: '.75' }),
+        h('circle', { key: 'c', cx: '14.4', cy: '8.4', r: '2.2', fill: '#fff' }),
+        h('path', { key: 'l1', d: 'M5.4 7.2v5.2', stroke: '#fff', strokeWidth: '1.7', strokeLinecap: 'round' }),
+        h('path', { key: 'l2', d: 'M7.4 5.6c2.4 0 4.2 1.1 4.9 2.8', stroke: '#fff', strokeWidth: '1.7', strokeLinecap: 'round', fill: 'none' }),
+      ],
+      /* 文件系统：文件夹轮廓。 */
+      filesystem: () => [
+        h('path', { key: 'f', d: 'M2.8 6.2c0-.8.6-1.4 1.4-1.4h3l1.4 1.6h6.2c.8 0 1.4.6 1.4 1.4v5.6c0 .8-.6 1.4-1.4 1.4H4.2c-.8 0-1.4-.6-1.4-1.4V6.2z', fill: '#fff' }),
+        h('rect', { key: 'g', x: '2.8', y: '8.4', width: '14.4', height: '1.2', fill: '#fff', opacity: '.35' }),
+      ],
+      context7: () => [
+        h('path', { key: 'a', d: 'M13.6 4.4a6 6 0 1 0 0 11.2', stroke: '#fff', strokeWidth: '2.2', fill: 'none', strokeLinecap: 'round' }),
+        h('path', { key: 'b', d: 'M12 7.6h4.6v4.8H12', stroke: '#fff', strokeWidth: '2.2', fill: 'none', strokeLinecap: 'round', strokeLinejoin: 'round' }),
+      ],
+      fetch: () => [
+        h('path', { key: 'a', d: 'M10 2.8v9.4', stroke: '#fff', strokeWidth: '1.9', strokeLinecap: 'round' }),
+        h('path', { key: 'b', d: 'M5.8 8.4 10 12.6l4.2-4.2', stroke: '#fff', strokeWidth: '1.9', fill: 'none', strokeLinecap: 'round', strokeLinejoin: 'round' }),
+        h('path', { key: 'c', d: 'M3.6 15.4h12.8', stroke: '#fff', strokeWidth: '1.9', strokeLinecap: 'round', opacity: '.6' }),
+      ],
+      'brave-search': () => [
+        h('path', { key: 'a', d: 'M12.4 3.2 15 6l-.8 8.4-4.2 2.4-4.2-2.4L5 6l2.6-2.8 2.4 1.2 2.4-1.2z', fill: '#fff' }),
+        h('path', { key: 'b', d: 'M10 8.6v5', stroke: '#fb542b', strokeWidth: '1.6', strokeLinecap: 'round' }),
+      ],
+      tavily: () => [
+        h('circle', { key: 'a', cx: '9', cy: '9', r: '4.4', stroke: '#fff', strokeWidth: '1.9', fill: 'none' }),
+        h('path', { key: 'b', d: 'M12.4 12.4 16.4 16.4', stroke: '#fff', strokeWidth: '1.9', strokeLinecap: 'round' }),
+        h('circle', { key: 'c', cx: '9', cy: '9', r: '1.5', fill: '#fff' }),
+      ],
+      /* Postgres：大象轮廓（鼻 + 耳），官方是黑色大象剪影。 */
+      postgres: () => [
+        h('path', {
+          key: 'e',
+          d: 'M13.8 5.2c.9 1.4 1.1 3.3.5 5.4-.6 2.2-1.9 3.6-2.6 4.6-.4.6-.3 1.4.4 1.4.6 0 1.4-.5 1.4-1.5 0 0 .1 2.3-1.9 2.3-1.6 0-1.9-1.5-1.9-2.2 0-.6-.2-.9-.7-.9s-.7.4-.7 1c0 .8-.6 2.1-2.1 2.1-1.9 0-1.8-2.3-1.8-2.3 0 1 .9 1.5 1.5 1.5.7 0 .8-.8.5-1.4-.6-1-2.1-2.6-2.5-5.5-.3-2.2.4-4 1.4-5 1-1 3.4-1.6 5.4-1 .6.2 1.3.1 2 .5.5.3.7.8 1.5 1.1z',
+          fill: '#fff',
+        }),
+        h('circle', { key: 'n', cx: '7.1', cy: '4.4', r: '1.5', fill: '#fff', opacity: '.55' }),
+      ],
+      sqlite: () => [
+        h('ellipse', { key: 'a', cx: '10', cy: '5.4', rx: '6', ry: '2.4', stroke: '#fff', strokeWidth: '1.8', fill: 'none' }),
+        h('path', { key: 'b', d: 'M4 5.4v9.2c0 1.3 2.7 2.4 6 2.4s6-1.1 6-2.4V5.4', stroke: '#fff', strokeWidth: '1.8', fill: 'none' }),
+        h('path', { key: 'c', d: 'M4 10c0 1.3 2.7 2.4 6 2.4s6-1.1 6-2.4', stroke: '#fff', strokeWidth: '1.8', fill: 'none', opacity: '.55' }),
+      ],
+      memory: () => [
+        h('circle', { key: 'a', cx: '6.4', cy: '6.6', r: '2.6', fill: '#fff' }),
+        h('circle', { key: 'b', cx: '13.4', cy: '8.4', r: '2.1', fill: '#fff', opacity: '.78' }),
+        h('circle', { key: 'c', cx: '8.4', cy: '13.6', r: '2.1', fill: '#fff', opacity: '.6' }),
+        h('path', { key: 'l', d: 'M8.4 6.9l3.4 1.2M7.7 8.9l1.1 2.9', stroke: '#fff', strokeWidth: '1.4', strokeLinecap: 'round', opacity: '.85' }),
+      ],
+      /* Chrome DevTools：三色环 + 中心圆。 */
+      'chrome-devtools': () => [
+        h('circle', { key: 'bg', cx: '10', cy: '10', r: '7.2', fill: '#fff' }),
+        h('path', { key: 'r', d: 'M10 2.8a7.2 7.2 0 0 1 6.2 3.6H10z', fill: '#ea4335' }),
+        h('path', { key: 'g', d: 'M3.9 12.6a7.2 7.2 0 0 1 3-9.6l3.1 5.4z', fill: '#34a853' }),
+        h('path', { key: 'y', d: 'M16.1 12.6A7.2 7.2 0 0 1 5.4 17.6l3.1-5.4z', fill: '#fbbc05' }),
+        h('circle', { key: 'c', cx: '10', cy: '10', r: '2.6', fill: '#4285f4' }),
+      ],
+      playwright: () => [
+        h('path', { key: 'a', d: 'M3.4 11.6c1.6-3.4 4-5.4 6.6-5.4s5 2 6.6 5.4', stroke: '#fff', strokeWidth: '1.9', fill: 'none', strokeLinecap: 'round' }),
+        h('circle', { key: 'b', cx: '7.2', cy: '13.8', r: '1.5', fill: '#fff' }),
+        h('circle', { key: 'c', cx: '12.8', cy: '13.8', r: '1.5', fill: '#fff', opacity: '.7' }),
+      ],
+      puppeteer: () => [
+        h('rect', { key: 'a', x: '3.4', y: '4.6', width: '13.2', height: '9.2', rx: '2', stroke: '#fff', strokeWidth: '1.9', fill: 'none' }),
+        h('circle', { key: 'b', cx: '7.6', cy: '9.2', r: '1.3', fill: '#fff' }),
+        h('circle', { key: 'c', cx: '12.4', cy: '9.2', r: '1.3', fill: '#fff', opacity: '.7' }),
+        h('path', { key: 'd', d: 'M8 16.6h4', stroke: '#fff', strokeWidth: '1.9', strokeLinecap: 'round' }),
+      ],
+      slack: () => [
+        h('rect', { key: 'a', x: '4.2', y: '8.6', width: '5.4', height: '2.6', rx: '1.3', fill: '#fff' }),
+        h('rect', { key: 'b', x: '10.4', y: '8.8', width: '5.4', height: '2.6', rx: '1.3', fill: '#fff', opacity: '.8' }),
+        h('rect', { key: 'c', x: '8.6', y: '4.2', width: '2.6', height: '5.4', rx: '1.3', fill: '#fff', opacity: '.8' }),
+        h('rect', { key: 'd', x: '8.8', y: '10.4', width: '2.6', height: '5.4', rx: '1.3', fill: '#fff' }),
+      ],
+      notion: () => [
+        h('path', { key: 'a', d: 'M4.4 4.4 15.8 3v12.8L4.4 17V4.4z', stroke: '#fff', strokeWidth: '1.8', fill: 'none', strokeLinejoin: 'round' }),
+        h('path', { key: 'b', d: 'M7.6 7.2v6.4l5-6.8v7', stroke: '#fff', strokeWidth: '1.8', fill: 'none', strokeLinecap: 'round', strokeLinejoin: 'round' }),
+      ],
+      linear: () => [
+        h('path', { key: 'a', d: 'M3.4 11.6 8.4 16.6', stroke: '#fff', strokeWidth: '1.9', strokeLinecap: 'round' }),
+        h('path', { key: 'b', d: 'M3 8.2l8.8 8.8', stroke: '#fff', strokeWidth: '1.9', strokeLinecap: 'round', opacity: '.8' }),
+        h('path', { key: 'c', d: 'M3.2 4.8a1.6 1.6 0 0 1 1.6-1.6l11.4 11.4a1.6 1.6 0 0 1-1.6 1.6L3.2 4.8z', fill: '#fff', opacity: '.92' }),
+      ],
+      sentry: () => [
+        h('path', { key: 'a', d: 'M10 3.4 17 15.6H9.4', stroke: '#fff', strokeWidth: '1.9', fill: 'none', strokeLinecap: 'round', strokeLinejoin: 'round' }),
+        h('path', { key: 'b', d: 'M3 15.6 6.6 9.4l2.2 3.8', stroke: '#fff', strokeWidth: '1.9', fill: 'none', strokeLinecap: 'round', strokeLinejoin: 'round', opacity: '.75' }),
+      ],
+      'sequential-thinking': () => [
+        h('circle', { key: 'a', cx: '5.4', cy: '5.4', r: '1.9', fill: '#fff' }),
+        h('circle', { key: 'b', cx: '10', cy: '10', r: '1.9', fill: '#fff', opacity: '.8' }),
+        h('circle', { key: 'c', cx: '14.6', cy: '14.6', r: '1.9', fill: '#fff', opacity: '.6' }),
+        h('path', { key: 'l', d: 'M6.8 6.8l2 2M11.6 11.6l2 2', stroke: '#fff', strokeWidth: '1.4', strokeLinecap: 'round', opacity: '.6' }),
+      ],
+      time: () => [
+        h('circle', { key: 'a', cx: '10', cy: '10', r: '6.6', stroke: '#fff', strokeWidth: '1.9', fill: 'none' }),
+        h('path', { key: 'b', d: 'M10 6.4V10l2.8 1.8', stroke: '#fff', strokeWidth: '1.9', fill: 'none', strokeLinecap: 'round', strokeLinejoin: 'round' }),
+      ],
+      everything: () => [
+        h('circle', { key: 'a', cx: '6.6', cy: '7', r: '2.6', stroke: '#fff', strokeWidth: '1.8', fill: 'none' }),
+        h('circle', { key: 'b', cx: '13.4', cy: '7', r: '2.6', stroke: '#fff', strokeWidth: '1.8', fill: 'none', opacity: '.7' }),
+        h('circle', { key: 'c', cx: '10', cy: '13.6', r: '2.6', stroke: '#fff', strokeWidth: '1.8', fill: 'none', opacity: '.55' }),
+      ],
+    }
+
+    /**
+     * 统一的「服务图标」。
+     *
+     * 有品牌标记就画标记，没有就回落成首字母块 —— 两条路径共用同一尺寸与圆角，
+     * 所以一行卡片混排时基线是齐的。
+     */
+    function BrandIcon({ icon, color, text, size = 36, radius = 9 }) {
+      const draw = icon ? BRAND_ICONS[icon] : null
+      if (!draw) {
+        return h(
+          'span',
+          {
+            className: 'co-conn-badge',
+            style: { background: color || T.brand, width: size, height: size, borderRadius: radius, fontSize: Math.max(11, Math.round(size * 0.36)) },
+            'aria-hidden': true,
+          },
+          text,
+        )
+      }
       return h(
         'span',
         {
-          className: 'co-conn-badge',
-          style: { background: color || T.brand, width: size, height: size, borderRadius: radius, fontSize },
+          className: 'co-conn-badge co-brand',
+          style: { background: color || T.brand, width: size, height: size, borderRadius: radius },
           'aria-hidden': true,
         },
-        text,
+        h(
+          'svg',
+          { width: size * 0.62, height: size * 0.62, viewBox: '0 0 20 20', fill: 'none' },
+          ...draw(size),
+        ),
       )
+    }
+
+    function Badge({ color, text, size = 38, radius = 10, fontSize = 17, icon }) {
+      return h(BrandIcon, { icon, color, text, size, radius, fontSize })
     }
 
     function ConnectorCard({ item, busy, onOpen, onPlus }) {
@@ -956,7 +1161,7 @@ window.__ModuleLoader__.load({
             }
           },
         },
-        h(Badge, { color: item.badgeColor, text: item.badge }),
+        h(Badge, { color: item.badgeColor, text: item.badge, icon: item.icon }),
         h(
           'div',
           { className: 'co-conn-main' },
@@ -1746,7 +1951,7 @@ window.__ModuleLoader__.load({
               h('path', { d: 'M3 1.5 L7 5 L3 8.5', stroke: 'currentColor', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round' }),
             ),
           ),
-          h('span', { className: 'co-svc-badge', style: { background: item.badgeColor } }, item.badge),
+          h(Badge, { color: item.badgeColor, text: item.badge, icon: item.icon, size: 32, radius: 8 }),
           h(
             'div',
             { className: 'co-svc-main' },
@@ -1825,65 +2030,143 @@ window.__ModuleLoader__.load({
 
     /* ── MCP Hub：预置模板目录 ─────────────────────────────────────── */
 
-    function HubCard({ item, installed, onPick }) {
+    /**
+     * Hub 里的一个服务卡片。
+     *
+     * 内置三条（builtin）与模板走同一个卡片：区别只在副标题的运行时状态
+     * （已连接 / 待连接 / 需装 CLI）和点击后走哪条路 —— 内置走「一键连接」，
+     * 模板走「预填添加弹层」。以前 Hub 里完全看不到钉钉飞书，看起来像
+     * 「Hub 不支持内置服务」，实际只是没列出来。
+     */
+    function HubCard({ item, installed, state, busy, onPick, onConnect, onOpen }) {
+      const isBuiltin = Boolean(item.builtin)
+      const connected = isBuiltin ? Boolean(state?.connected) : Boolean(installed)
+      const enabled = isBuiltin ? Boolean(state?.enabled) : true
+      const ready = isBuiltin ? Boolean(state?.ready) : true
+      const toolCount = isBuiltin ? state?.toolCount || 0 : 0
+      const needsLabel = isBuiltin && !state?.connected
+        ? state?.cliInstalled === false
+          ? '需装 CLI'
+          : state?.tokenPresent === false
+            ? '需令牌'
+            : '可一键连接'
+        : null
       return h(
         'div',
         {
           className: 'co-hub-card',
+          'data-on': connected && enabled ? '1' : '0',
+          'data-builtin': isBuiltin ? '1' : '0',
           role: 'button',
           tabIndex: 0,
-          'aria-label': `安装 ${item.name}`,
-          onClick: () => onPick(item),
+          'aria-label': `${isBuiltin ? (connected ? '管理' : '连接') : '安装'} ${item.name}`,
+          onClick: () => (isBuiltin ? (connected ? onOpen(item) : onConnect(item, state)) : onPick(item)),
           onKeyDown: (event) => {
             if (event.key === 'Enter' || event.key === ' ') {
               event.preventDefault()
-              onPick(item)
+              if (isBuiltin) connected ? onOpen(item) : onConnect(item, state)
+              else onPick(item)
             }
           },
         },
-        h(Badge, { color: item.badgeColor, text: item.badge, size: 36, radius: 9, fontSize: 13 }),
+        h(Badge, { color: item.badgeColor, text: item.badge, icon: item.icon, size: 38, radius: 10 }),
         h(
           'div',
           { className: 'co-hub-main' },
           h(
             'div',
             { className: 'co-hub-name' },
-            h('span', { style: { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, item.name),
-            h('span', { className: 'co-hub-vendor' }, item.vendor),
+            // 名称是这一行的识别字段，永不截断；被挤的是后面的 vendor。
+            h('span', null, item.name),
+            connected && enabled ? h('span', { className: 'co-live', title: '已连接' }) : null,
+            h('span', { className: 'co-hub-vendor', title: item.vendor }, item.vendor),
           ),
           h('div', { className: 'co-hub-desc' }, item.summary),
           h(
             'div',
             { className: 'co-hub-ft' },
-            installed ? h(Chip, { tone: 'ok' }, '已安装') : null,
-            h(Chip, null, item.transport === 'streamable-http' ? 'http' : 'stdio'),
-            (item.envKeys || []).length + (item.headerKeys || []).length > 0 ? h(Chip, { tone: 'warn' }, '需凭据') : null,
+            isBuiltin
+              ? connected
+                ? h(Chip, { tone: enabled ? 'ok' : 'warn' }, enabled ? `${toolCount || 0} 个工具` : '已停用')
+                : h(Chip, { tone: 'brand' }, needsLabel || '未连接')
+              : [
+                  installed ? h(Chip, { key: 'i', tone: 'ok' }, '已安装') : null,
+                  h(Chip, { key: 't' }, item.transport === 'streamable-http' ? 'http' : 'stdio'),
+                  (item.envKeys || []).length + (item.headerKeys || []).length > 0
+                    ? h(Chip, { key: 'c', tone: 'warn' }, '需凭据')
+                    : null,
+                ],
             ...(item.tags || []).slice(0, 2).map((tag) => h('span', { key: tag, className: 'co-tag' }, tag)),
           ),
         ),
+        // 内置三项的操作按钮：已连接显示「管理」（打开详情弹层），未连接显示「连接」。
+        isBuiltin
+          ? h(
+              'button',
+              {
+                className: 'co-hub-cta',
+                disabled: busy,
+                onClick: (event) => {
+                  event.stopPropagation()
+                  if (connected) onOpen(item)
+                  else onConnect(item, state)
+                },
+                title: connected ? '查看连接详情 / 登录 / 令牌' : ready ? '一键连接（装 CLI / 走设备码 / 建连接）' : '先补齐前置条件',
+              },
+              busy ? '…' : connected ? '管理' : '连接',
+            )
+          : null,
       )
     }
 
-    function Hub({ onPick }) {
+    function Hub({ onPick, onConnect, onOpen }) {
       const [data, setData] = useState(null)
       const [error, setError] = useState(null)
       const [query, setQuery] = useState('')
+      // 分类改成横排标签（与插件市场同一套交互）：下拉框把 6 个分类藏进二次点击，
+      // 而分类本身是这张页最主要的导航维度，应该一眼可见、一次点到。
       const [category, setCategory] = useState('')
-      // 已安装集合由本页自己取一次：Panel 的 /state 不含服务列表，别为这个再加一路订阅。
       const [installed, setInstalled] = useState([])
+      const [builtinState, setBuiltinState] = useState({})
+      const [busyId, setBusyId] = useState(null)
+
+      const reload = useCallback(() => {
+        return Promise.all([
+          api('/hub').then((next) => {
+            setData(next)
+            const map = {}
+            for (const item of next.builtins || []) map[item.id] = item
+            setBuiltinState(map)
+          }),
+          api('/connectors').then((next) => setInstalled((next.services || []).map((item) => item.serverName))),
+        ]).catch((err) => setError(err.message))
+      }, [])
 
       useEffect(() => {
         let alive = true
-        api('/hub')
-          .then((next) => alive && setData(next))
-          .catch((err) => alive && setError(err.message))
-        api('/connectors')
-          .then((next) => alive && setInstalled((next.services || []).map((item) => item.serverName)))
-          .catch(() => {})
+        reload().then(() => {
+          if (!alive) return
+        })
         return () => {
           alive = false
         }
-      }, [])
+      }, [reload])
+
+      const handleConnect = useCallback(
+        async (item, state) => {
+          setBusyId(item.connectorId || item.id)
+          setError(null)
+          try {
+            await onConnect(item, state)
+            await reload()
+          } catch (err) {
+            setError(`${item.name}：${err.message}`)
+          } finally {
+            setBusyId(null)
+          }
+        },
+        [onConnect, reload],
+      )
 
       const items = data?.items || []
       const categories = data?.categories || []
@@ -1900,6 +2183,8 @@ window.__ModuleLoader__.load({
         groups.get(item.category).push(item)
       }
       const ordered = [...categories.filter((name) => groups.has(name)), ...[...groups.keys()].filter((name) => !categories.includes(name))]
+      // 分类标签带计数：一眼看出哪一类有多少个，不用点进去数。
+      const countOf = (name) => items.filter((item) => item.category === name).length
 
       return h(
         'div',
@@ -1909,26 +2194,45 @@ window.__ModuleLoader__.load({
           { className: 'co-hub-bar' },
           h('input', {
             className: 'co-input',
-            style: { width: 260 },
-            placeholder: '搜索 MCP 服务，如 filesystem、搜索、数据库',
+            style: { width: 280 },
+            placeholder: '搜索 MCP 服务，如 钉钉、filesystem、数据库',
             'aria-label': '搜索 MCP 服务',
             value: query,
             onChange: (event) => setQuery(event.target.value),
           }),
-          h(
-            'select',
-            {
-              className: 'co-input co-sel',
-              'aria-label': '按分类筛选',
-              style: { width: 132 },
-              value: category,
-              onChange: (event) => setCategory(event.target.value),
-            },
-            h('option', { value: '' }, '全部分类'),
-            ...categories.map((name) => h('option', { key: name, value: name }, name)),
-          ),
           h('span', { style: { flex: 1 } }),
           h('span', { className: 'co-hint', style: { fontVariantNumeric: 'tabular-nums' } }, `${filtered.length} / ${items.length}`),
+        ),
+        h(
+          'div',
+          { className: 'co-tabs', role: 'tablist', 'aria-label': 'MCP 服务分类' },
+          h(
+            'button',
+            {
+              className: 'co-tab',
+              'data-on': category === '' ? '1' : '0',
+              role: 'tab',
+              'aria-selected': category === '',
+              onClick: () => setCategory(''),
+            },
+            '全部',
+            h('span', { className: 'co-tab-n' }, items.length),
+          ),
+          ...categories.map((name) =>
+            h(
+              'button',
+              {
+                key: name,
+                className: 'co-tab',
+                'data-on': category === name ? '1' : '0',
+                role: 'tab',
+                'aria-selected': category === name,
+                onClick: () => setCategory(category === name ? '' : name),
+              },
+              name,
+              h('span', { className: 'co-tab-n' }, countOf(name)),
+            ),
+          ),
         ),
         error ? h('div', { className: 'co-err' }, error) : null,
         ...ordered.map((name) =>
@@ -1949,7 +2253,11 @@ window.__ModuleLoader__.load({
                   key: item.id,
                   item,
                   installed: installed.includes(item.serverName || item.id),
+                  state: item.builtin ? builtinState[item.connectorId] : null,
+                  busy: busyId === (item.connectorId || item.id),
                   onPick: (picked) => onPick(picked),
+                  onConnect: handleConnect,
+                  onOpen: (picked) => onOpen(picked),
                 }),
               ),
             ),
@@ -1963,7 +2271,7 @@ window.__ModuleLoader__.load({
       )
     }
 
-    function Connectors({ presetSeed, onPresetConsumed }) {
+    function Connectors({ presetSeed, onPresetConsumed, hubHandoff, onHubHandoffConsumed }) {
       const [data, setData] = useState(null)
       const [error, setError] = useState(null)
       const [open, setOpen] = useState(null)
@@ -2005,6 +2313,19 @@ window.__ModuleLoader__.load({
         setCustomOpen(true)
         onPresetConsumed?.()
       }, [presetSeed, onPresetConsumed])
+
+      /**
+       * Hub 里点了内置服务的「连接」，需要授权：这里把详情弹层打开并带上设备码。
+       * 依赖 data —— builtins 还没到就找不到对应项，等数据回来再开。
+       */
+      useEffect(() => {
+        if (!hubHandoff || !data) return
+        const item = (data.builtins || []).find((entry) => entry.id === hubHandoff.id)
+        if (!item) return
+        setSeed({ id: item.id, device: hubHandoff.device })
+        setOpen(item)
+        onHubHandoffConsumed?.()
+      }, [hubHandoff, data, onHubHandoffConsumed])
 
       const submitCustom = useCallback(
         async (payload) => {
@@ -2267,6 +2588,8 @@ window.__ModuleLoader__.load({
       const [refreshing, setRefreshing] = useState(false)
       // Hub → 添加 MCP 的交接：Hub 里选中一项后，切回「我的 MCP」并把模板塞进弹层。
       const [presetSeed, setPresetSeed] = useState(null)
+      // Hub → 一键连接的交接：需要设备码授权时，把 device 带给「我的 MCP」的详情弹层。
+      const [hubHandoff, setHubHandoff] = useState(null)
       const mounted = useRef(true)
 
       const loadState = useCallback(async (force) => {
@@ -2294,13 +2617,37 @@ window.__ModuleLoader__.load({
       }, [loadState])
 
       const consumePreset = useCallback(() => setPresetSeed(null), [])
+      const consumeHubHandoff = useCallback(() => setHubHandoff(null), [])
 
       const pickFromHub = useCallback((item) => {
+        // 内置项没有 install 载荷（参数由 connectors.js 运行时现算），不该走这条路。
+        if (item.builtin) return
         // install（hubInstallPayload 的产物）放后面：模板算出来的 command / args / url
         // 才是权威值。反过来的话，item 上缺字段时弹层会静默退回空表单。
         setPresetSeed({ ...item, ...(item.install || {}) })
         setTab('connectors')
       }, [])
+
+      /**
+       * Hub 里点内置服务：走和「我的 MCP」页同一套一键连接。
+       *
+       * 直接把 /connectors/connect 打出去就行 —— 那条路由自己会装 CLI、走设备码、
+       * 建 Loader 行。需要授权时它返回 needsLogin，这里把用户带回「我的 MCP」
+       * 并打开详情弹层，设备码在那边显示（Hub 里再放一套设备码 UI 是重复）。
+       */
+      const connectFromHub = useCallback(
+        async (item) => {
+          const id = item.connectorId || item.id
+          const result = await api('/connectors/connect', { method: 'POST', body: JSON.stringify({ id }) })
+          if (result.needsLogin) {
+            setHubHandoff({ id, device: result.device })
+            setTab('connectors')
+            return
+          }
+          await loadState(false)
+        },
+        [loadState],
+      )
 
       const subtitle = state
         ? `统一管理 MCP 服务 · 缓存 ${state.cacheDir} · TTL ${state.cacheTtlMs ? Math.round(state.cacheTtlMs / 3600000) + ' h' : '—'}`
@@ -2345,8 +2692,20 @@ window.__ModuleLoader__.load({
               )
             : null,
         ),
-        tab === 'connectors' ? h(Connectors, { presetSeed, onPresetConsumed: consumePreset }) : null,
-        tab === 'hub' ? h(Hub, { onPick: pickFromHub }) : null,
+        tab === 'connectors'
+          ? h(Connectors, { presetSeed, onPresetConsumed: consumePreset, hubHandoff, onHubHandoffConsumed: consumeHubHandoff })
+          : null,
+        tab === 'hub'
+          ? h(Hub, {
+              onPick: pickFromHub,
+              onConnect: connectFromHub,
+              onOpen: (item) => {
+                // 已连接的内置项：把详情弹层交给「我的 MCP」打开（那里有登录 / 令牌 / 停用）。
+                setHubHandoff({ id: item.connectorId || item.id, device: null })
+                setTab('connectors')
+              },
+            })
+          : null,
         tab === 'overview' ? h(Overview, { state, refreshing, onRefresh: loadState }) : null,
         tab === 'catalog' ? h(Catalog, { initialSurface: 'dingtalk' }) : null,
         tab === 'tools' ? h(ToolPreview, { initialSurface: 'dingtalk' }) : null,

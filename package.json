@@ -1,6 +1,6 @@
 {
   "name": "dsh-chatops-mcp",
-  "version": "1.9.0",
+  "version": "1.9.1",
   "description": "MCP service manager for DeepSeek Harness: one panel listing every mcp-client row (builtin DingTalk / Feishu / Feishu Project, user-added, and rows written elsewhere) with per-tool expansion, plus an MCP Hub of 21 installable templates. Portable: no absolute paths, connections are provisioned at boot and persisted outside the profile.",
   "keywords": [
     "dsh",

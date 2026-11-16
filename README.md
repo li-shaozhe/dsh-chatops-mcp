@@ -11,7 +11,9 @@ DSH 的 **MCP 服务管理面板 + MCP Hub**：统一管理任意 MCP 服务，�
 | `feishu` | `mcp__feishu__*` | 本包 `server.js feishu`，包装 `lark-cli` | `%USERPROFILE%\.lark-cli` 已有登录 |
 | `meego` | `mcp__meego__*` | **官方** `@lark-project/mcp`（48 工具），经 `meego-launch.js` 注入 token | `%USERPROFILE%\.dsh\chatops\meego\.env` |
 
-钉钉和飞书复用本机已有 CLI 登录态，零新增应用密钥；飞书项目直接用官方服务器，不自己实现 Open API。这三条只是内置项，面板本身与它们无关：任何 `mcp-client` 行都能在同一张列表里管理和启停，Hub 里还有 21 个可安装模板（文件系统、Git、GitHub、数据库、浏览器、Notion、Slack…）。
+钉钉和飞书复用本机已有 CLI 登录态，零新增应用密钥；飞书项目直接用官方服务器，不自己实现 Open API。这三条只是内置项，面板本身与它们无关：任何 `mcp-client` 行都能在同一张列表里管理和启停。
+
+**Hub 页也会列出这三条内置服务**（排在最前面的「办公协作」下），卡片上直接显示已连接状态与工具数，未连接时给一个「连接」按钮走同一套一键连接。加完再补 21 个可安装模板（文件系统、Git、GitHub、数据库、浏览器、Notion、Slack…），一共 24 项、6 个分类。
 
 装完左侧栏会多一个「MCP 服务管理」（order 3），点开是统一服务列表 —— 每行可展开看工具名、可开关、可删除，`+ 添加 MCP` 支持贴 `mcpServers` JSON 或手填表单。见 [安装](#安装) 与 [面板](#面板)。
 
@@ -208,7 +210,7 @@ loader.remove(entryId)                                      // 断开连接
 | 页签 | 内容 |
 |---|---|
 | 我的 MCP | 统一服务列表：每条 `mcp-client` 行一行（内置三条、面板添加的、别处写进 Loader 的都算），左箭头展开工具名清单，右侧开关 + 删除；底部「可一键连接」放还没连的内置连接器 |
-| MCP Hub | 预置模板目录，按分类分组（文件与代码 / 搜索与抓取 / 数据与存储 / 浏览器与自动化 / 办公与协作 / 分析工具），选中即把 command / args / url / 凭据字段填进「添加 MCP」弹层 |
+| MCP Hub | 24 项按 6 个分类排列（办公协作 / 文件与代码 / 搜索与抓取 / 数据与存储 / 浏览器与自动化 / 分析工具），分类用横排标签栏切换并带计数。前三条是**内置服务**（钉钉 / 飞书 / 飞书项目）：卡片显示已连接状态与工具数，未连接时右上角给「连接」按钮；其余 21 项是可安装模板，选中即把 command / args / url / 凭据字段填进「添加 MCP」弹层 |
 | 概览 | 三条内置连接各一张卡：CLI 路径与版本、登录身份、组织/部门/邮箱、catalog 条数、已 materialise 数量与产品配比；飞书项目额外显示 server 入口、token 来源文件、脱敏 token 提示 |
 | CLI 目录 | 直接浏览 `dws` / `lark-cli` 的完整 self-schema（1098 / 246 条），支持 surface 切换、关键词、product、effect 过滤；点任意行展开该命令的完整 flag 列表 |
 | 工具预览 | 输入 products / effect / max，预览「按当前配置会 materialise 出哪些工具」，改参数不用重装就能看效果 |
@@ -248,7 +250,7 @@ MCP 子进程用 `nodeCommand()` 选出的 node 启动。它不会盲取 PATH �
 | 路由 | 说明 |
 |---|---|
 | `GET /chatops-mcp/connectors` | 统一服务列表（`services`）+ 内置连接器状态 + 自定义连接 + 工具计数 + node 体检 |
-| `GET /chatops-mcp/hub` | MCP Hub 模板目录（每项含可直接提交的 `install` 载荷） |
+| `GET /chatops-mcp/hub` | Hub 目录：`items`（内置三条 `install: null`，模板带 `install` 载荷）+ `categories` + `builtins`（三条内置的运行时状态：已连接 / 工具数 / 是否需装 CLI / 是否需令牌） |
 | `POST /chatops-mcp/services/toggle` | 任意行启停（body `{"entryId":"...","enabled":false}`）；外部行 `persisted:false` |
 | `POST /chatops-mcp/services/remove` | 删除本包拥有的行；外部行返回 `reason:"external"` |
 | `POST /chatops-mcp/services/install-hub` | 按 Hub 模板建连接（body `{"id":"filesystem","overrides":{...}}`） |
@@ -434,4 +436,6 @@ npm --prefix /tmp/probe install dsh-chatops-mcp --no-fund --no-audit
 - 连接表里 `chatops-conn-meego` 的 config 不含令牌（令牌只存 `%USERPROFILE%\.dsh\chatops\meego\.env`）。自定义连接如果自己在 `env` 里填了密钥，那串值会明文写进 `connections.json` —— 这个文件在用户目录下、权限继承用户，别提交进 git。
 - 贴 JSON 建连只做语法校验，**不验证连通性**：URL 打不通、包名不存在也会建行成功，表现为该行 `toolCount` 恒为 0。要判断是否真连上，看面板卡片上的工具数。
 - 面板里服务行的工具数来自宿主 `tools.schemas()`（全局作用域视角）。MCP 工具若注册在具体会话作用域，这里可能读到 0 而连接其实正常，所以 0 显示成「工具数不可见」而不是报警。真正的失败先看 node 体检红条。
-- MCP Hub 是**可安装模板**，不是「已核实的官方服务」清单：每个模板的 command / args / URL 只描述怎么起进程或连地址，`probeStatus` 之类一律不声明。带路径示例的模板（`D:/path/to/workspace`）要用户自己改，否则服务起来也只会指向一个不存在的目录。
+- MCP Hub 里只有 21 个模板是可安装项，`probeStatus` 之类一律不声明：每个模板的 command / args / URL 只描述怎么起进程或连地址。带路径示例的模板（`D:/path/to/workspace`）要用户自己改，否则服务起来也只会指向一个不存在的目录。
+- Hub 里那三条**内置服务**不是模板：`hubInstallPayload()` 对它们返回 `null`，因为 command / args / 令牌来源由 `connectors.js` 在运行时按本机情况现算（CLI 路径、node、env 文件）。点它们的卡片走 `/connectors/connect`（装 CLI → 设备码 → 建 Loader 行），不是「填表单」。
+- 面板图标按品牌画简化标记（钉钉的翅膀、飞书的双翼、GitHub 的猫头轮廓、Chrome 三色环……），不是官方矢量图的逐像素复刻：要能随 32/38px 缩放、在浅深背景上都清楚，且不引外部图片依赖。认不出的 `serverName`（用户自己加的服务）回落成首字母块。
